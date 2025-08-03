@@ -1,0 +1,577 @@
+<?php
+
+class Headq_M extends MY_Model {
+
+    function __construct() {
+        parent::__construct();
+    }
+
+    public function checklogin($username, $password) {
+
+        $sql = $this->db->select('*')->from($this->_adminusers)->where('username', $username)->where('password', $password)->where('status', '1');
+        $res = $this->db->get();
+        //var_dump($sql);
+
+
+        if ($res->num_rows() > 0) {
+            $data = $res->row_array();
+			//
+			
+            $this->session->set_userdata('uid', $data["u_id"]);
+            $this->session->set_userdata('username', $data["username"]);
+            $this->session->set_userdata('utype', $data["u_type"]);
+            $this->session->set_userdata('uaccess', $data["u_access"]);
+            $this->session->set_userdata('loggedin', TRUE);
+			$this->session->set_userdata('log_type','1');
+            return true;
+        } else {
+            return false;
+        }
+
+        $res->free_result();
+    }
+
+    public function loggedin() {
+
+        return (bool) $this->session->userdata('loggedin');
+    }
+
+    public function hash($string) {
+
+        return hash('sha512', $string . config_item('encryption_key'));
+    }
+
+	public function get_ALLdocument_for_DMS($id = NULL) {
+
+        $this->db->select('*');
+        $this->db->from('content_files_tab');
+        $this->db->join('section_tab','section_tab.section_id = content_files_tab.file_section');
+        //$this->db->where('content_files_tab.f_status','1');
+        $query = $this->db->get();
+        return $query->result();
+    }
+
+    public function update_adminuser_modified($now) {
+        $id = $this->session->userdata('uid');
+
+        $this->db->set($now);
+        $this->db->where('u_id', $id);
+        $this->db->update($this->_adminusers);
+    }
+    
+    public function GetDetailsofUsers($uid)
+    {
+		$this->db->select('user_info.*, master_user_type.mu_name');
+		$this->db->from('user_info');
+		$this->db->join('master_user_type','master_user_type.mu_id = user_info.u_type');
+		$this->db->where('u_id', $uid);
+		$query = $this->db->get();
+		return $query->row();
+	}
+    
+    public function searchallAdminUser()
+    {
+		$this->db->select('user_views.*, master_user_type.mu_name as parent_type');
+		$this->db->from('user_views');
+		$this->db->join('master_user_type','master_user_type.mu_id = user_views.u_masteruser','LEFT');
+		$this->db->where('u_id !=', 1);
+		$query = $this->db->get();
+		return $query->result();
+	}
+	
+	public function saveNewUser($rows, $row1) {
+        $this->db->trans_start();
+		$this->db->set($rows);
+		$this->db->insert($this->_adminusers, $rows);
+        $user_id = $this->db->insert_id();
+        
+        $row1['uid'] = $user_id;
+        $this->db->set($row1);
+        $this->db->insert("user_details",$row1);
+        
+        $this->db->trans_complete();
+        if ($this->db->trans_status() === TRUE) {
+            return TRUE;
+        }else{
+            return FALSE;
+        }	
+    }
+	
+	public function allSuppliers_InsertUpdate($rows, $s_id = NULL){
+		$this->db->set($rows);
+		if($s_id != NULL){
+			$this->db->where('supp_id', $s_id);
+			if($this->db->update("supplier_master", $rows)){
+				return TRUE;
+			}else{
+				return FALSE;
+			}
+		}else{
+			if($this->db->insert("supplier_master", $rows)){
+				return TRUE;
+			}else{
+				return FALSE;
+			}
+	    }
+	}
+	
+	public function check_supplier_mobile_exist($mobileno, $sid = NULL)
+	{
+		$this->db->select('*');
+		$this->db->from('supplier_master');
+		$this->db->where('supp_mobile', $mobileno);
+		if($sid != NULL)
+        	$this->db->where('supp_id != ', $sid);
+        $query = $this->db->get();
+		if($query->num_rows() > 0)
+		{
+			return FALSE;
+		}
+		else
+		{
+			return TRUE;
+		}
+	}
+	
+	public function allGuideline_Instruction_InsertUpdate($rows, $g_id = NULL){
+		$this->db->set($rows);
+		if($g_id != NULL){
+			$this->db->where('gi_id', $g_id);
+			if($this->db->update("gudie_instruct_tab", $rows)){
+				return TRUE;
+			}else{
+				return FALSE;
+			}
+		}else{
+			if($this->db->insert("gudie_instruct_tab", $rows)){
+				return TRUE;
+			}else{
+				return FALSE;
+			}
+	    }
+	}
+	
+	public function check_email_exist($emailid, $uid = NULL)
+	{
+		$this->db->select('*');
+		$this->db->from('user_info');
+		$this->db->where('email', $emailid);
+		if($uid != NULL)
+        	$this->db->where('u_id != ', $uid);
+        $query = $this->db->get();
+		if($query->num_rows() > 0)
+		{
+			return FALSE;
+		}
+		else
+		{
+			return TRUE;
+		}
+	}
+	
+	public function check_password_exist($passward, $uid)
+	{
+		$this->db->select('*');
+		$this->db->from($this->_adminusers);
+		$this->db->where('u_id', $uid);
+		$this->db->where('password', $passward);
+        $query = $this->db->get();
+        if($query->num_rows() > 0)
+		{
+			return TRUE;
+		}
+		else
+		{
+			return FALSE;
+		}
+	}
+	
+	public function check_username_exist($username, $uid = NULL)
+	{
+		$this->db->select('*');
+		$this->db->from('user_info');
+		$this->db->where('username', $username);
+		if($uid != NULL)
+        	$this->db->where('u_id != ', $uid);
+        $query = $this->db->get();
+		if($query->num_rows() > 0)
+		{
+			return FALSE;
+		}
+		else
+		{
+			return TRUE;
+		}
+	}
+
+	public function check_usertype_Already_exist($utype, $uid = NULL)
+	{
+		$this->db->select('*');
+		$this->db->from('user_info');
+		$this->db->where('u_type', $utype);
+		if($uid != NULL)
+        	$this->db->where('u_id != ', $uid);
+        $query = $this->db->get();
+		if($query->num_rows() > 0)
+		{
+			return FALSE;
+		}
+		else
+		{
+			return TRUE;
+		}
+	}
+
+	public function check_usertype_Already_existinDistrict($p_utype, $dist, $uid = NULL)
+	{
+		$this->db->select('*');
+		$this->db->from('user_info');
+		$this->db->where('u_masteruser', $p_utype);
+		$this->db->where('u_dist', $dist);
+		if($uid != NULL)
+        	$this->db->where('u_id != ', $uid);
+        $query = $this->db->get();
+		if($query->num_rows() > 0)
+		{
+			return FALSE;
+		}
+		else
+		{
+			return TRUE;
+		}
+	}
+	
+	public function change_user_status($uid, $cng_status)
+	{
+		$data = array(
+		               'status' => $cng_status
+		            );
+		$this->db->where('u_id', $uid);
+		if($this->db->update($this->_adminusers, $data))
+		{
+			return TRUE;
+		}
+		else
+		{
+			return FALSE;
+		}
+	}
+	
+	public function get_all_permitApplication_details($uid){
+		$this->db->select('user_permission_tab.*, permit_application.papp_name');
+		$this->db->from('user_permission_tab');
+		$this->db->join('permit_application','permit_application.papp_id = user_permission_tab.up_application');
+		$this->db->where('user_permission_tab.up_master_user', $uid);
+		$query = $this->db->get();
+		return $query->result();
+	}
+	
+	public function permission_Inserted_DB($rows, $p_id = NULL){
+		$this->db->set($rows);
+		if($p_id != NULL){
+			$this->db->where('up_id', $p_id);
+			if($this->db->update("user_permission_tab", $rows)){
+				return TRUE;
+			}else{
+				return FALSE;
+			}
+		}else{
+			if($this->db->insert("user_permission_tab", $rows)){
+				return TRUE;
+			}else{
+				return FALSE;
+			}
+	    }
+	}
+	
+	public function permission_Exist_inDB_forUser($p_app, $users){
+		$this->db->select('*');
+		$this->db->from('user_permission_tab');
+		$this->db->where('up_master_user', $users);
+		$this->db->where('up_application', $p_app);
+		$query = $this->db->get();
+		if($query->num_rows() > 0)
+		{
+			return TRUE;
+		}
+		else
+		{
+			return FALSE;
+		}
+	}
+	
+	/*public function UpdateSavedUser($rows, $uid)
+	{
+		$this->db->set($rows);
+        $this->db->where('u_id', $uid);
+        if($this->db->update($this->_adminusers))
+        	return TRUE;
+        else
+        	return FALSE;
+	}*/
+	
+	public function getAll_discussion_byUser_fromDB($q_no = NULL){
+		$this->db->select('query_tab.*, f_user_views.*');
+		$this->db->from('query_tab');
+		$this->db->join('f_user_views','f_user_views.f_uid = query_tab.query_user');
+		if($q_no != NULL){
+			$this->db->where('query_tab.query_no', $q_no);
+			$query = $this->db->get();
+			return $query->row();
+		}else{
+			$this->db->order_by('query_tab.query_id','DESC');
+			$query = $this->db->get();
+			return $query->result();
+		}
+	}
+	
+	public function UpdateSavedUser_Password($rows, $uid){
+		$this->db->set($rows);
+		$this->db->where('u_id', $uid);
+        if($this->db->update($this->_adminusers, $rows)){
+		    return TRUE;
+        }else{
+            return FALSE;
+        }	
+	}
+	
+	public function UpdateSavedUser($rows, $row1, $uid)
+	{
+		$this->db->trans_start();
+		$this->db->set($rows);
+		$this->db->where('u_id', $uid);
+        $this->db->update($this->_adminusers, $rows);
+        
+        $this->db->set($row1);
+        $this->db->where('uid', $uid);
+        $this->db->update("user_details", $row1);
+        
+        $this->db->trans_complete();
+        if ($this->db->trans_status() === TRUE) {
+            return TRUE;
+        }else{
+            return FALSE;
+        }	
+	}
+	
+	public function common_Insertion_in_DB($row_arrary, $table_name){
+		$this->db->set($row_arrary);
+        if($this->db->insert($table_name, $row_arrary)){
+			return TRUE;
+		}else{
+			return FALSE;
+		}
+	}
+	
+	public function common_Updation_in_DB($row_arrary, $table_name, $table_column, $column_value){
+		$this->db->set($row_arrary);
+		$this->db->where($table_column, $column_value);
+        if($this->db->update($table_name, $row_arrary)){
+			return TRUE;
+		}else{
+			return FALSE;
+		}
+	}
+	
+	
+	public function FindSubAdminName()
+	{
+		$this->db->select('u_id, username');
+		$this->db->from('user_views');
+		$query = $this->db->get();
+		return $query->result();
+	}
+	
+	public function get_ALL_FrontEnduser_DMS($fuid = NULL){
+		$this->db->select('*');
+        $this->db->from('frontend_users');
+        if($fuid != NULL){
+			$this->db->where('fuser_id', $fuid);
+			$query = $this->db->get();
+        	return $query->row();
+		}else{
+			$query = $this->db->get();
+        	return $query->result();
+		}   
+	}
+
+	public function getAll_work_fromDB(){
+		$this->db->select('main_work_tab.*, work_sector_tab.ws_name, fund_source_tab.fs_name');
+		$this->db->from('main_work_tab');
+		$this->db->join('fund_source_tab','fund_source_tab.fs_id = main_work_tab.mw_fund_source');
+		$this->db->join('work_sector_tab','work_sector_tab.ws_id = main_work_tab.mw_sector');
+		$this->db->order_by('main_work_tab.mw_id','DESC');
+		$query = $this->db->get();
+		return $query->result();
+	}
+
+	public function addUpdateform_ofWork_inDB($row1, $row2 = NULL, $row3 = NULL, $workid = NULL){
+		$this->db->trans_start();
+
+		if($row2 != NULL){
+			$this->db->set($row2);
+			$this->db->insert('fund_source_tab', $row2);
+			$fund_id = $this->db->insert_id();
+			$row1['mw_fund_source'] = $fund_id;
+		}
+		if($row3 != NULL){
+			$this->db->set($row3);
+			$this->db->insert('work_sector_tab', $row3);
+			$sector_id = $this->db->insert_id();
+			$row1['mw_sector'] = $sector_id;
+		}
+		$this->db->set($row1);
+		if($workid != NULL){
+			$this->db->where('mw_id', $workid);
+			$this->db->update('main_work_tab', $row1);
+		}else{
+			$this->db->insert('main_work_tab', $row1);
+		}
+		
+        $this->db->trans_complete();
+        if ($this->db->trans_status() === TRUE){
+            return TRUE;
+        }else{
+            return FALSE;
+        }
+	}
+
+	public function addUpdateform_of_WorkAllocation_inDB($rows, $wid = NULL){
+		$this->db->set($rows);
+		if($wid != NULL){
+			$this->db->where('work_id', $wid);
+			if($this->db->update("work_allocate_details", $rows)){
+				return TRUE;
+			}else{
+				return FALSE;
+			}
+		}else{
+			if($this->db->insert("work_allocate_details", $rows)){
+				return TRUE;
+			}else{
+				return FALSE;
+			}
+	    }
+	}
+
+	public function get_all_NewWork_for_Allocate($f_year){
+		$this->db->select('main_work_tab.mw_name, main_work_tab.mw_unique_id, work_allocate_details.work_id');
+		$this->db->from('main_work_tab');
+		$this->db->join('work_allocate_details','work_allocate_details.work_master_id = main_work_tab.mw_unique_id','LEFT');
+		$this->db->where('main_work_tab.mw_year', $f_year);
+		$this->db->where('main_work_tab.mw_tender_float', 'Yes');
+		$this->db->where('work_allocate_details.work_id IS NULL');
+		$this->db->order_by('main_work_tab.mw_id','DESC');
+		$query = $this->db->get();
+		return $query->result();
+	}
+	
+	public function getAll_workAllocation_fromDB($workallocid = NULL){
+		$this->db->select('work_allocate_details.*,main_work_tab.mw_name, main_work_tab.mw_year, uv1.username as ae_name, uv2.username as sae_name');
+		$this->db->from('work_allocate_details');
+		$this->db->join('main_work_tab','main_work_tab.mw_unique_id = work_allocate_details.work_master_id');
+		$this->db->join('user_views uv1','uv1.u_id = work_allocate_details.work_se_id');
+		$this->db->join('user_views uv2','uv2.u_id = work_allocate_details.work_ase_id');
+		if($workallocid != NULL){
+			$this->db->where('work_allocate_details.work_id', $workallocid);
+			$query = $this->db->get();
+			return $query->row();
+		}else{
+			$this->db->order_by('work_allocate_details.work_id','DESC');
+			$query = $this->db->get();
+			return $query->result();
+		}
+	}
+
+	public function getAll_workAllocation_fromDB_byProgress($workuid = NULL){
+		$this->db->select('work_allocate_details.*,main_work_tab.mw_name, main_work_tab.mw_year, main_work_tab.mw_unique_id, main_work_tab.mw_progress_stat, main_work_tab.mw_finalbill_put');
+		$this->db->from('work_allocate_details');
+		$this->db->join('main_work_tab','main_work_tab.mw_unique_id = work_allocate_details.work_master_id');
+		//$this->db->join('user_views uv1','uv1.u_id = work_allocate_details.work_se_id');
+		//$this->db->join('user_views uv2','uv2.u_id = work_allocate_details.work_ase_id');
+		if($workuid != NULL){
+			$this->db->where('main_work_tab.mw_unique_id', $workuid);
+			$query = $this->db->get();
+			return $query->row();
+		}else{
+			$this->db->order_by('work_allocate_details.work_id','DESC');
+			$query = $this->db->get();
+			return $query->result();
+		}
+	}
+
+	public function addUpdate_WorkProgress_inDB($row1, $row2, $pic_row = NULL, $wpid = NULL){
+		$this->db->trans_start();
+
+		$this->db->set($row1);
+		$this->db->insert('work_progress_tab', $row1);
+		$w_progress_id = $this->db->insert_id();
+
+		$this->db->set($row2);
+		$this->db->where('mw_unique_id', $wpid);
+		$this->db->update('main_work_tab', $row2);
+
+		if($pic_row != NULL){
+			foreach($pic_row as $pics){
+				$pic_arr = array(
+					'wpp_master_progrid' => $w_progress_id,
+					'wpp_pic_source' => $pics,
+					'wpp_createdate' => date('Y-m-d H:i:s')
+				);
+				$this->db->set($pic_arr);
+				$this->db->insert('work_prog_pictures', $pic_arr);
+			}	
+		}
+		
+        $this->db->trans_complete();
+        if ($this->db->trans_status() === TRUE){
+            return TRUE;
+        }else{
+            return FALSE;
+        }
+	}
+
+	public function addUpdate_WorkProgress_Bill_inDB($row1, $row2, $wpid){
+		$this->db->trans_start();
+
+		$this->db->set($row1);
+		$this->db->insert('work_bill_tab', $row1);
+		
+		$this->db->set($row2);
+		$this->db->where('mw_unique_id', $wpid);
+		$this->db->update('main_work_tab', $row2);
+
+		$this->db->trans_complete();
+        if ($this->db->trans_status() === TRUE){
+            return TRUE;
+        }else{
+            return FALSE;
+        }
+	}
+	
+	public function getAll_workProgress_fromDB_byVisit($workuid){
+		$this->db->select('work_progress_tab.*,main_work_tab.mw_name, main_work_tab.mw_year, main_work_tab.mw_progress_stat, main_work_tab.mw_finalbill_put');
+		$this->db->from('work_progress_tab');
+		$this->db->join('main_work_tab','main_work_tab.mw_unique_id = work_progress_tab.wp_masterid');
+		$this->db->join('user_views','user_views.u_id = work_progress_tab.wp_createby');
+		$this->db->where('main_work_tab.mw_unique_id', $workuid);
+		$this->db->order_by('work_progress_tab.wp_id', 'ASC');
+		$query = $this->db->get();
+		return $query->result();
+	}
+	
+	public function getAll_workProgress_Bill_fromDB($workuid){
+		$this->db->select('work_bill_tab.*,main_work_tab.mw_name, main_work_tab.mw_year, main_work_tab.mw_progress_stat, main_work_tab.mw_finalbill_put');
+		$this->db->from('work_bill_tab');
+		$this->db->join('main_work_tab','main_work_tab.mw_unique_id = work_bill_tab.wb_master_id');
+		$this->db->join('user_views','user_views.u_id = work_bill_tab.wb_createby');
+		$this->db->where('main_work_tab.mw_unique_id', $workuid);
+		$this->db->order_by('work_bill_tab.wb_id', 'ASC');
+		$query = $this->db->get();
+		return $query->result();
+	}
+	
+	
+	
+	
+}

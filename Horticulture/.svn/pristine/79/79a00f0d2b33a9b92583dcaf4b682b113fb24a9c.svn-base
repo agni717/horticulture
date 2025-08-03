@@ -1,0 +1,1923 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class Userset extends Application_Controller {
+	
+	function __construct() {
+        parent::__construct();
+		$this->data['user_details'] = $this->db->get_where('f_user_views',array('u_id'=>$this->session->userdata('member_id'), 'is_active'=>1))->row();
+		$this->load->model('main_m');
+    }
+	
+	public function index()
+	{
+		redirect('userset/applicant_reg_detailsets');
+		exit;
+	}
+
+	public function applicant_dashboard(){
+		$user_details = $this->data['user_details'];
+		if($user_details->email_verify != 1){
+			redirect('userset/applicant_reg_details_entry');
+		}
+		$this->data['applicantion_data'] = $this->main_m->getAll_application_forUser($this->session->userdata('member_id'));
+		$this->load->view('main/citizen/dashboard_view',$this->data);
+	}
+
+	public function applicant_reg_details_entry(){
+		$this->data[ 'district_data' ] = $this->db->get_where('district_master',array('district_status'=>1))->result();
+		$this->load->view('main/citizen/registration',$this->data);
+	}
+	
+	
+	public function applicant_reg_detailsets(){
+		$user_details = $this->data['user_details'];
+		if($user_details->email_verify != 1){
+			redirect('userset/applicant_reg_details_entry');
+		}
+
+		$this->load->view('main/citizen/registration_view',$this->data);
+	}
+
+	protected function generateRandomString($length = 4){
+		$characters = '0123456789';
+		$charactersLength = strlen($characters);
+		$randomString = '';
+		for ($i = 0; $i < $length; $i++) {
+			$randomString .= $characters[rand(0, $charactersLength - 1)];
+		}
+		return $randomString;
+	}
+
+	public function updateapplicant_details(){
+		if($_POST){
+         
+			$first_name = $this->input->post('first_name');
+			$middle_name = $this->input->post('middle_name');
+			$last_name = $this->input->post('last_name');
+			$gender = $this->input->post('gender');
+			$parent_name = $this->input->post('parent_name');
+			$email = $this->input->post('email');
+			$district_code = $this->input->post('district_code');
+			$Sub_Division = $this->input->post('Sub_Division');
+			$block = $this->input->post('block');
+			$gram_panchayat = $this->input->post('gram_panchayat');
+			$village = $this->input->post('village');
+			$Post_office = $this->input->post('Post_office');
+			$pincode = $this->input->post('pincode');
+
+			$this->form_validation->set_rules('first_name', 'First Name', 'trim|alpha|required');
+			$this->form_validation->set_rules('middle_name', 'Middle Name', 'trim|alpha');
+			$this->form_validation->set_rules('last_name', 'Last Name', 'trim|alpha|required');
+			$this->form_validation->set_rules('gender', 'Gender', 'trim|alpha|required');
+			$this->form_validation->set_rules('parent_name', 'Father\'s / Husband\'s Name', 'trim|required');
+			$this->form_validation->set_rules('email', 'Email', 'trim|required|valid_email');
+			//$this->form_validation->set_rules('adv_category', 'Discipline', 'trim|required|is_natural_no_zero');
+			$this->form_validation->set_rules('district_code', 'District', 'trim|required|is_natural');
+			$this->form_validation->set_rules('Sub_Division', 'Sub Division', 'trim|required|is_natural');
+			$this->form_validation->set_rules('block', 'Block', 'trim|required|is_natural');
+			$this->form_validation->set_rules('gram_panchayat', 'Gram Panchayat', 'trim|required|is_natural');
+			//$this->form_validation->set_rules('adv_experience', 'Experience', 'trim|is_natural');
+			$this->form_validation->set_rules('village', 'Village', 'trim|required');
+			$this->form_validation->set_rules('Post_office', 'Post Office', 'trim|required');
+			$this->form_validation->set_rules('pincode', 'Pincode', 'trim|required|is_natural');
+
+			if ($this->form_validation->run()) {
+
+				if (count($_FILES) > 0) {
+					$filename = $_FILES['files']['name'];
+					if (!empty($filename)) {
+						$this->load->library('upload');
+						$this->load->library('image_lib');
+
+						$config['upload_path'] = realpath('uploads/applicant_photos/');
+						$config['allowed_types'] = 'jpg|jpeg|png|JPG|JPEG|PNG';
+						$config['overwrite'] = FALSE;
+						$config['remove_spaces'] = TRUE;
+						$config['max_size'] = '2048';
+						$config['file_name'] = "IMG-".$this->generateRandomString(10);//$filename;
+
+						$this->load->library('upload', $config);
+						$this->upload->initialize($config);
+
+						if ($this->upload->do_upload('files')) {
+
+							$upload_data = $this->upload->data();
+							$generate_otp = $this->generateRandomString(6);
+							if($middle_name == ""){
+								$middle_name = NULL;
+							}
+							////////////////
+							$row_arr = array(
+								'u_email' => $email,
+								'u_otpset' => $generate_otp,
+								'otp_sendtime' => date('Y-m-d H:i:s'),
+								'first_name' => $first_name,
+								'middle_name' => $middle_name,
+								'last_name' => $last_name,
+								'u_gender' => $gender,
+								'u_parent_name' => $parent_name,
+								'u_district' => $district_code,
+								'u_sub_division' => $Sub_Division,
+								'u_block' => $block,
+								'u_gram_panchayat' => $gram_panchayat,
+								'u_village' => $village,
+								'u_post_office' => $Post_office,
+								'u_pincode' => $pincode,
+								'u_image' => $upload_data['file_name'],
+								'u_modifydate' => date('Y-m-d H:i:s')
+							);
+
+							if ($this->main_m->insertRegistration_details_intheDB($row_arr, $this->session->userdata('member_id')) == TRUE) {
+								$this->session->set_userdata('member_email_set', $email);
+								echo json_encode(array('msg' => 1));
+							} else {
+								echo json_encode(array('msg' => 0, 'e_msg' => 'There have some DB Updation Problem, Try again.'));
+							}
+							//////////////////////////
+						} else {
+							echo json_encode(array('msg' => 0, 'e_msg' => $this->upload->display_errors()));
+						}
+					} else {
+						echo json_encode(array('msg' => 0, 'e_msg' => 'Image Not Upload properly, Check again.'));
+					}
+				} else {
+					echo json_encode(array('msg' => 0, 'e_msg' => 'Applicant\'s Photo is missing, Try again.'));
+				}
+			} else {
+				echo json_encode(array('msg' => 0, 'e_msg' => validation_errors()));
+			}
+			exit;
+
+		}else{
+			redirect('default404');
+		}
+	}
+
+	public function emailotp_page(){
+		$user_details = $this->data['user_details'];
+		if($this->session->userdata('member_email_set') == ""){
+			redirect('userset/applicant_reg_details_entry');
+		}
+		if($user_details->email_verify == 1){
+			redirect('userset/applicant_dashboard');
+		}
+		$this->data['error'] = "";
+		//$this->data['mobotp'] = $this->db->get_where('user_info',array('u_mobile'=>$this->session->userdata('member_mobile_set')))->row()->u_otpset;
+		$this->load->view('main/citizen/email-otp-login', $this->data);
+	}
+
+	public function checkotp_email_forvalidate_candidates(){
+		if($_POST){
+			$emailotp_sign = $this->input->post('combine');
+			$emailid = $this->input->post('emailid');
+			$otp1 = $this->input->post('otp1');
+			$otp2 = $this->input->post('otp2');
+			$otp3 = $this->input->post('otp3');
+			$otp4 = $this->input->post('otp4');
+			$otp5 = $this->input->post('otp5');
+			$otp6 = $this->input->post('otp6');
+			$serverconbile = $otp1.$otp2.$otp3.$otp4.$otp5.$otp6;
+			
+			$this->form_validation->set_rules('emailid', 'Email-ID', 'trim|required|valid_email');
+            $this->form_validation->set_rules('combine', 'OTP', 'trim|required|is_natural');
+            $this->form_validation->set_rules('otp1', 'OTP-1', 'trim|required|is_natural');
+            $this->form_validation->set_rules('otp2', 'OTP-2', 'trim|required|is_natural');
+            $this->form_validation->set_rules('otp3', 'OTP-3', 'trim|required|is_natural');
+            $this->form_validation->set_rules('otp4', 'OTP-4', 'trim|required|is_natural');
+            $this->form_validation->set_rules('otp5', 'OTP-5', 'trim|required|is_natural');
+            $this->form_validation->set_rules('otp6', 'OTP-6', 'trim|required|is_natural');
+            
+			if($this->form_validation->run() == TRUE)
+            {	
+				$detailset = $this->data['user_details'];
+				if($detailset->u_otpset == $emailotp_sign &&  $emailotp_sign == (int)$serverconbile){
+					$row_arr = array(
+						'u_otpset' => NULL,
+						'email_verify' => 1,
+						'u_modifydate' => date('Y-m-d H:i:s')
+					);
+					if($this->main_m->insertRegistration_details_intheDB($row_arr, $detailset->u_id) == TRUE){
+							//mkdir(base_url()."upload_file/candidates/".$detailset->f_application_no);
+							/*mkdir("upload_file/".$detailset->f_applied_for."/candidates/".$detailset->f_application_no);
+							$now_arr = array(
+								'fu_log_user' => $this->session->userdata('member_id'),
+								'fu_log_time' => date('Y-m-d H:i:s'),
+								'fu_log_ip' => $_SERVER['HTTP_X_FORWARDED_FOR'] //$this->input->ip_address()
+							);
+							$this->main_m->update_Candidate_user_log($now_arr);
+							$this->main_m->init_candidate_result_tab($detailset->f_application_no);*/
+							echo json_encode(array('msg'=>1));
+						
+					}else{
+						echo json_encode(array('msg'=>0, 'e_msg'=>'Data not Update properly, Try Again'));
+					}
+				}else{
+					echo json_encode(array('msg'=>0, 'e_msg'=>'Email OTP Not Matched, Check Again.'));
+				}
+
+			}else{
+				echo json_encode(array('msg'=>0, 'e_msg'=>validation_errors()));
+			}
+			exit;
+		}else{
+			redirect('default404');
+		}
+	}
+
+	public function logout() {
+		//removing session 
+		//$sch_id = $this->session->userdata( 'user_data' )[ 'sch_id' ];
+		$this->session->sess_destroy();
+		//$this->index(); 
+		redirect( base_url() );
+	}
+
+	/////////////////
+	public function exist_project_details($schid = NULL){
+		if($this->session->userdata('member_scm_id') != ""){
+			$projsets = $this->db->select('*')->from('application_master')->where(array('user_id'=>$this->session->userdata('member_id'),'scheme_id'=>$this->session->userdata('member_scm_id')))->get()->row();
+			if(empty($projsets)){
+				$row_arr = array(
+					'scheme_id' => $this->session->userdata('member_scm_id'),
+					'user_id' => $this->session->userdata('member_id')
+				);
+				$newappid = $this->main_m->submit_application_form($row_arr);
+				$projsets = $this->db->select('*')->from('application_master')->where(array('application_id'=>$newappid))->get()->row();
+			}
+		}elseif($schid != NULL){
+			$projsets = $this->db->select('*')->from('application_master')->where(array('user_id'=>$this->session->userdata('member_id'),'scheme_id'=>$schid))->get()->row();
+			$this->session->set_userdata('member_scm_id', $schid);
+			if(empty($projsets)){
+				$row_arr = array(
+					'scheme_id' => $this->session->userdata('member_scm_id'),
+					'user_id' => $this->session->userdata('member_id')
+				);
+				$newappid = $this->main_m->submit_application_form($row_arr);
+				$projsets = $this->db->select('*')->from('application_master')->where(array('application_id'=>$newappid))->get()->row();
+			}
+		}
+		//print_r($projsets);exit;
+		if($projsets->proj_step1_submit == 1){
+			redirect('userset/project_details');
+		}elseif($projsets->is_applicant_submitted == 2){
+			redirect('userset/applicant_dashboard');
+		}
+		
+		$industry_master = false;
+        $table_row = '';
+		$industry_master = $this->main_m->get_industry_master_data($projsets->application_id);
+
+		if($industry_master != false){
+			foreach($industry_master as $indus){
+
+				$table_row.='<tr id="industry_tr_'.$indus->industry_id.'"><td>'.$indus->industry_name.'</td><td>'.$indus->industry_location.'</td><td>'.$indus->prod_name.'</td><td>'.$indus->industry_Address.'</td><td>'.$indus->industry_Address2.'</td><td>'.$indus->district_name.'</td><td>'.$indus->subdiv_name.'</td><td>'.$indus->block_name.'</td><td>'.$indus->panchayat_name.'</td><td>'.$indus->industry_village.'</td><td>'.$indus->industry_Police_Station.'</td><td>'.$indus->industry_Pincode.'</td><td><a href="javascript:void(0);" class="text-danger" onclick="delete_industry('.$indus->industry_id.');"><i class="fa fa-trash"></i></a></td></tr>';
+			}
+		}
+		$this->data['industry_master'] = $industry_master;
+        $this->data['table_row'] = $table_row;
+        
+		$this->data[ 'product_data' ] = $this->db->get_where('product_master',array('prod_status'=>1))->result();
+		$this->data[ 'district_data' ] = $this->db->get_where('district_master',array('district_status'=>1))->result();
+		$this->load->view('main/citizen/applicant_details_form',$this->data);
+	}
+
+	public function ajax_get_branch() {
+		if($_POST){
+
+			$proj_bank_name = $this->input->post( 'proj_bank_name' );
+	  
+			$branch_data = $this->main_m->get_branch( $proj_bank_name );
+			$option = '';
+			if ( !empty( $branch_data ) ) {
+				$option .= '<option value="">---Select---</option>';
+				foreach ( $branch_data as $row ) {
+				$option .= '<option value="' . $row->branch_id . '">' . $row->branch_name . '</option>';
+			  }
+		  
+			} else {
+			  $option .= '<option value="">---Select---</option>';
+			}
+		  
+			echo $option;
+			exit;
+
+		}else{
+			redirect('default404');
+		}
+	  
+	}
+
+	public function ajax_get_ifsc() {
+		if($_POST){
+			$proj_branch = $this->input->post( 'proj_branch' );
+		
+			$ifsc_data = $this->main_m->get_ifsc_by_branch( $proj_branch );
+		
+			$ifscode = '';
+			if ( !empty( $ifsc_data ) ) {
+				$ifscode = $ifsc_data->IFSCCODE;
+			} else {
+				$ifscode = '';
+			}
+			echo $ifscode;
+			exit;
+
+		}else{
+			redirect('default404');
+		}
+	  
+	}
+
+	public function project_details()
+    {
+        $projsets = $this->db->select('*')->from('application_master')->where(array('user_id'=>$this->session->userdata('member_id'),'scheme_id'=>$this->session->userdata('member_scm_id')))->get()->row();
+		if($projsets->proj_step1_submit != 1){
+			redirect('userset/exist_project_details');
+		}elseif($projsets->proj_step2_submit == 1){
+			redirect('userset/proj_cost_details');
+		}elseif($projsets->is_applicant_submitted == 2){
+			redirect('userset/applicant_dashboard');
+		}
+		$application_id = $this->data['application_id'] = $projsets->application_id;
+        $this->data['project_data']=$projsets;
+        $this->data['project_unit']=$this->db->get_where('project_cost_unit_info',array())->result();
+		$this->data['bank_data']=$this->db->get_where('bank_master',array())->result();
+        //print_r($this->data['project_data']);die();
+        
+        $this->data[ 'district_data' ] = $this->db->get_where('district_master',array('district_status'=>1))->result();
+		if(!empty($projsets->proj_district)){
+			$this->data[ 'subdiv_data' ] = $this->db->get_where('subdivision_tab',array('subdiv_district'=>$projsets->proj_district, 'subdiv_status'=>1))->result();
+			if(!empty($projsets->proj_sub_division)){
+				$this->data[ 'block_data' ] = $this->db->get_where('block_master',array('subd_id'=>$projsets->proj_sub_division, 'block_status'=>1))->result();
+				if(!empty($projsets->proj_block)){
+					$this->data[ 'gp_data' ] = $this->db->get_where('panchayat_master',array('gram_block_id'=>$projsets->proj_block,'status'=>1))->result();
+				}
+			}
+		}
+		if(!empty($projsets->proj_bank_name)){
+			$this->data[ 'branch_data' ] = $this->db->get_where('branch_master',array('bank_id'=>$projsets->proj_bank_name))->result();
+		}
+		$this->data[ 'product_data' ] = $this->db->get_where('product_master',array('prod_status'=>1))->result();
+        $this->load->view('main/citizen/project',$this->data);
+    }
+
+	public function update_projectall_details(){
+		if($_POST){
+
+			$proj_name = $this->input->post('proj_name');
+			$proj_prod_manufacture = $this->input->post('proj_prod_manufacture');
+			
+			$proj_address_1 = $this->input->post('proj_address_1');
+			$proj_address_2 = $this->input->post('proj_address_2');
+			$p_district_code = $this->input->post('p_district_code');
+			$p_Sub_Division = $this->input->post('p_Sub_Division');
+			$p_block = $this->input->post('p_block');
+			$p_gram_panchayat = $this->input->post('p_gram_panchayat');
+			$proj_village = $this->input->post('proj_village');
+			$proj_Post_office = $this->input->post('proj_Post_office');
+			$proj_pincode = $this->input->post('proj_pincode');
+
+			$proj_daag_no = $this->input->post('proj_daag_no');
+			$proj_khatian_no = $this->input->post('proj_khatian_no');
+			$proj_mouza_no = $this->input->post('proj_mouza_no');
+			$proj_jl_no = $this->input->post('proj_jl_no');
+			$proj_land_type = $this->input->post('proj_land_type');
+			$proj_current_status = $this->input->post('proj_current_status');
+			$proj_proposed_pro_date = $this->input->post('proj_proposed_pro_date');
+			$proj_technology = $this->input->post('proj_technology');
+			$proj_plant_capacity = $this->input->post('proj_plant_capacity');
+			$proj_present_capacity = $this->input->post('proj_present_capacity');
+			$present_unit = $this->input->post('present_unit');
+			$proj_proposed_capacity = $this->input->post('proj_proposed_capacity');
+			$propose_unit = $this->input->post('propose_unit');
+
+			$proj_bank_name = $this->input->post('proj_bank_name');
+			$proj_branch = $this->input->post('proj_branch');
+			$proj_ifsc = $this->input->post('proj_ifsc');
+			$proj_acc_no = $this->input->post('proj_acc_no');
+			$proj_tl_cost = $this->input->post('proj_tl_cost');
+			$proj_pan_no = $this->input->post('proj_pan_no');
+			$docexist = $this->input->post('docexist');
+			$land_docexist = $this->input->post('land_docexist');
+			$has_yesno = $this->input->post('has_yesno');
+
+			$this->form_validation->set_rules('proj_name', 'Project Name', 'trim|required');
+			$this->form_validation->set_rules('proj_prod_manufacture', 'Products to be manufactured', 'trim|required|is_natural_no_zero');
+			
+			$this->form_validation->set_rules('proj_address_1', 'Discipline', 'trim|required');
+			$this->form_validation->set_rules('proj_address_2', 'Discipline', 'trim|required');
+			$this->form_validation->set_rules('p_district_code', 'District', 'trim|required|is_natural');
+			$this->form_validation->set_rules('p_Sub_Division', 'Sub Division', 'trim|required|is_natural');
+			$this->form_validation->set_rules('p_block', 'Block', 'trim|required|is_natural');
+			$this->form_validation->set_rules('p_gram_panchayat', 'Gram Panchayat', 'trim|required|is_natural');
+			$this->form_validation->set_rules('proj_village', 'Village', 'trim|required');
+			$this->form_validation->set_rules('proj_Post_office', 'Police Station', 'trim|required');
+			$this->form_validation->set_rules('proj_pincode', 'Pincode', 'trim|required|is_natural');
+
+			$this->form_validation->set_rules('proj_land_type', 'Land Type', 'trim|required|alpha');
+			$this->form_validation->set_rules('proj_current_status', 'Current Status', 'trim|required');
+			
+			if($proj_land_type == "Own"){
+				$this->form_validation->set_rules('proj_daag_no', 'Daag No', 'trim|required');
+				$this->form_validation->set_rules('proj_khatian_no', 'Khatian No', 'trim|required');
+				$this->form_validation->set_rules('proj_mouza_no', 'Mouza No', 'trim|required');
+				$this->form_validation->set_rules('proj_jl_no', 'J.L. No', 'trim|required');
+				$this->form_validation->set_rules('proj_proposed_pro_date', 'Proposed production date', 'trim|required');
+				$this->form_validation->set_rules('proj_technology', 'Technology', 'trim|required|alpha');
+				$this->form_validation->set_rules('proj_plant_capacity', 'Capacity of the Plant', 'trim|required|alpha');
+				if($proj_plant_capacity == "Existing"){
+					$this->form_validation->set_rules('proj_present_capacity', 'Present Capacity', 'trim|required|is_natural');
+					$this->form_validation->set_rules('present_unit', 'Present Unit', 'trim|required');
+					$this->form_validation->set_rules('proj_proposed_capacity', 'Proposed Capacity', 'trim|required|is_natural');
+					$this->form_validation->set_rules('propose_unit', 'Proposed Unit', 'trim|required');
+				}elseif($proj_plant_capacity == "Proposed"){
+					$this->form_validation->set_rules('proj_proposed_capacity', 'Proposed Capacity', 'trim|required|is_natural');
+					$this->form_validation->set_rules('propose_unit', 'Proposed Unit', 'trim|required');
+				}
+			}
+
+			$this->form_validation->set_rules('proj_bank_name', 'Name of Bank', 'trim|required|is_natural');
+			$this->form_validation->set_rules('proj_branch', 'Branch', 'trim|required|is_natural');
+			$this->form_validation->set_rules('proj_ifsc', 'IFSC', 'trim|required|alpha_numeric');
+			$this->form_validation->set_rules('proj_acc_no', 'Account No', 'trim|required|numeric');
+			$this->form_validation->set_rules('proj_tl_cost', 'Term loan received Amount', 'trim|required|numeric');
+			$this->form_validation->set_rules('proj_pan_no', 'PAN No.', 'trim|required|alpha_numeric');
+			$this->form_validation->set_rules('has_yesno', 'Term Loan Received', 'trim|required|alpha');
+			
+			if ($this->form_validation->run()) {
+				//echo "<pre>";print_r($_FILES);exit;
+				if($proj_current_status != "Started"){
+					if($has_yesno == "Yes"){
+						
+						$datecheck = 1;
+						if($proj_land_type == "Own"){
+							$curdate = date('Y-m-d');
+							$modifydate_chk = date('Y-m-d', strtotime($proj_proposed_pro_date. ' -60 days'));
+							if($curdate >= $modifydate_chk){
+								$datecheck++;
+							}
+						}
+						if($datecheck == 1){
+
+							$this->load->helper('file_upload');
+							$error_section = 1;
+							$land_docupdate = $file_doc = $error_received = ''; //$alldocs->doc_file_name;
+							if (isset($_FILES['files']) && !empty($_FILES['files'])) {
+								$upload_info = upload_file($_FILES['files'], "uploads/document_details", uniqid('ProjDOC_'), array('jpg', 'jpeg', 'JPG', 'JPEG' , 'PNG' , 'png', 'pdf', 'PDF'));
+								if ($upload_info['error']) {
+									$error_section++;
+									$error_received = $error_received. ' Term loan Document - '.$upload_info['status'].'<br/>';
+								} else {
+									//delete_file("upload_file/" . $userdetails->f_applied_for . "/candidates/" . $userdetails->f_application_no . "/" . $userdetails->fu_dob_doc);
+									$file_doc = $upload_info['result_path'];
+								}
+							}else{
+								if($docexist == ""){
+									$error_section++;
+									$error_received = $error_received. ' Term loan Document - need to Upload Properly.<br/>';
+								}else{
+									$file_doc = $docexist;
+								}
+							}
+
+							if (isset($_FILES['files2']) && !empty($_FILES['files2'])) {
+								$upload_info = upload_file($_FILES['files2'], "uploads/document_details", uniqid('LAND_DOCSETS_'), array('jpg', 'jpeg', 'JPG', 'JPEG' , 'PNG' , 'png', 'pdf', 'PDF'));
+								if ($upload_info['error']) {
+									$error_section++;
+									$error_received = $error_received. ' Land Document - '.$upload_info['status'].'<br/>';
+								} else {
+									$land_docupdate = $upload_info['result_path'];
+								}
+							}else{
+								if($land_docexist == ""){
+									$error_section++;
+									$error_received = $error_received. ' Land Document - File need to Upload Properly.<br/>';
+								}else{
+									$land_docupdate = $land_docexist;
+								}
+							}
+
+							if($error_section == 1){
+
+								if($proj_land_type != "Own"){
+									$proj_daag_no = $proj_khatian_no = $proj_mouza_no = $proj_jl_no = $proj_proposed_pro_date = $proj_technology = $proj_plant_capacity = $proj_present_capacity = $present_unit = $proj_proposed_capacity = $propose_unit = NULL;
+								}else{
+									$proj_proposed_pro_date = date('Y-m-d',strtotime($proj_proposed_pro_date));
+									if($proj_plant_capacity == "Proposed"){
+										$proj_present_capacity = $present_unit = NULL;
+									}
+								}
+								////////////////
+								$row_arr = array(
+									'proj_name' => $proj_name,
+									'proj_prod_manufacture' => $proj_prod_manufacture,
+									'proj_add1' => $proj_address_1,
+									'proj_add2' => $proj_address_2,
+									'proj_district' => $p_district_code,
+									'proj_sub_division' => $p_Sub_Division,
+									'proj_block' => $p_block,
+									'proj_gram_panchayat' => $p_gram_panchayat,
+									'proj_village' => $proj_village,
+									'proj_police_station' => $proj_Post_office,
+									'proj_pincode' => $proj_pincode,
+									'proj_daag_no' => $proj_daag_no,
+									'proj_khatian_no' => $proj_khatian_no,
+									'proj_mouza_no' => $proj_mouza_no,
+									'proj_jl_no' => $proj_jl_no,
+									'proj_land_type' => $proj_land_type,
+									'proj_current_status' => $proj_current_status,
+									'proj_proposed_pro_date' => $proj_proposed_pro_date,
+									'proj_technology' => $proj_technology,
+									'proj_plant_capacity' => $proj_plant_capacity,
+									'proj_present_capacity' => $proj_present_capacity,
+									'proj_present_unit' => $present_unit,
+									'proj_proposed_capacity' => $proj_proposed_capacity,
+									'proj_proposed_unit' => $propose_unit,
+									'proj_bank_name' => $proj_bank_name,
+									'proj_branch' => $proj_branch,
+									'proj_ifsc' => $proj_ifsc,
+									'proj_acc_no' => $proj_acc_no,
+									'proj_pan_no' => $proj_pan_no,
+									'proj_term_loan_sac_yesno' => $has_yesno,
+									'proj_land_document' => $land_docupdate,
+									'proj_document' => $file_doc,
+									'proj_tl_cost' => $proj_tl_cost,
+									'proj_step2_submit' => 1,
+									'proj_step2_datetime' => date('Y-m-d H:i:s')
+								);
+
+								if ($this->main_m->submit_project_details($this->session->userdata('member_id'), $this->session->userdata('member_scm_id'), $row_arr) == true) {
+									echo json_encode(array('msg' => 1));
+								} else {
+									echo json_encode(array('msg' => 0, 'e_msg' => 'There have some DB Updation Problem, Try again.'));
+								}
+								//////////////////////////
+							}else{
+								echo json_encode(array('msg' => 0, 'e_msg' => 'File Upload Problem occured, Check Again.<br/>'.$error_received));
+							}
+
+						}else{
+							echo json_encode(array('msg' => 0, 'e_msg' => 'Proposed date Always greater than 60 Days of Current Date, Check again.'));
+						}
+
+					}else{
+						echo json_encode(array('msg' => 0, 'e_msg' => 'Term loan sanction Need to SET always YES, Check again.'));
+					}
+				}else{
+					echo json_encode(array('msg' => 0, 'e_msg' => 'Current Status should be work in progress or not started, Check again.'));
+				}
+			} else {
+				echo json_encode(array('msg' => 0, 'e_msg' => validation_errors()));
+			}
+			exit;
+
+		}else{
+			redirect('default404');
+		}
+	}
+
+	public function ajax_get_subdivision()
+    {
+        $msg = 0;
+        $flag = 0;
+        $option ='';
+        $option_arr = array();
+        $id_arr = array();
+
+        $district_code = $this->input->post('district_code');
+        if($district_code != 'dor')
+        {
+            $msg = 1;
+            $flag = 1;
+            $option .= '<option value="">--Select Sub Division--</option>';
+            if($district_code != ''){
+                $subdivision_data = $this->main_m->get_subdivision($district_code);
+				/*echo '<pre>'; print_r($subdivision_data); die;*/
+                if(!empty($subdivision_data))
+                {
+                    foreach($subdivision_data as $row)
+                    {
+                        $option .= '<option value="'.$row->subdiv_id.'" >'.$row->subdiv_name.'</option>';
+                    }
+                }
+            }
+        }
+        else
+        {   
+            $msg = 1;
+            $flag = 2;
+            $sch_id = $this->session->userdata('member_scm_id');  
+            $user_id = $this->session->userdata('member_id');
+            $application_master = $this->main_m->get_application_master_data($sch_id,$user_id);
+            if(!empty($application_master)){
+                $industry_master_arr = $this->main_m->get_industry_master_data($application_master->industry_application_id);
+                if(!empty($industry_master_arr)){
+                    
+                    foreach($industry_master_arr as $industry_master){
+                        if($industry_master->industry_district != ''){
+                            $district_code = $industry_master->industry_district;
+                            $industry_Sub_Division = $industry_master->industry_Sub_Division;
+                            $subdivision_data = $this->main_m->get_subdivision($district_code);
+                            if(!empty($subdivision_data))
+                            {
+                                $option ='';
+                                $option .= '<option value="">--Select Sub Division--</option>';
+                                foreach($subdivision_data as $row)
+                                {
+                                    $option .= '<option value="'.$row->subdiv_id.'" ';
+                                    if($row->subdiv_id == $industry_Sub_Division){$option .='selected';}
+                                    $option .= '>'.$row->subdiv_name.'</option>';
+                                }
+                                $option_arr[] = $option;
+                                $id_arr[] = $industry_master->id;
+                            }
+                            else{
+                                $option_arr[] = '';
+                                $id_arr[] = $industry_master->id;
+                            }
+                        }else{
+                            $option_arr[] = '';
+                            $id_arr[] = $industry_master->id;
+                        }
+                    }
+                }
+            }
+        }
+
+        echo json_encode(array('msg' => $msg, 'flag' => $flag, 'option' => $option, 'id_arr' => $id_arr, 'option_arr' => $option_arr));
+    }
+
+    public function ajax_get_block()
+    {
+        $msg = 0;
+        $flag = 0;
+        $option ='';
+        $option_arr = array();
+        $id_arr = array();
+
+        $Sub_Division = $this->input->post('Sub_Division');
+        if($Sub_Division != 'dor')
+        {
+            $msg = 1;
+            $flag = 1;
+            $option .= '<option value="">--Select Block / Municipality--</option>';
+            if($Sub_Division != ''){
+                $block_data = $this->main_m->get_block($Sub_Division);
+				/*echo '<pre>'; print_r($block_data); die;*/
+                if(!empty($block_data))
+                {
+                    foreach($block_data as $row)
+                    {
+                        $option .= '<option value="'.$row->block_id.'">'.$row->block_name.'</option>';
+                    }
+                }
+            }
+        }
+        else
+        {   
+            $msg = 1;
+            $flag = 2;
+            $sch_id = $this->session->userdata('member_scm_id');  
+            $user_id = $this->session->userdata('member_id');
+            $application_master = $this->main_m->get_application_master_data($sch_id,$user_id);
+            if(!empty($application_master)){
+                $industry_master_arr = $this->main_m->get_industry_master_data($application_master->industry_application_id);
+                if(!empty($industry_master_arr)){
+                    
+                    foreach($industry_master_arr as $industry_master){
+                        if($industry_master->industry_Sub_Division != ''){
+                            $industry_Sub_Division = $industry_master->industry_Sub_Division;
+                            $industry_Block = $industry_master->industry_Block;
+                            $block_data = $this->main_m->get_block($industry_Sub_Division);
+                            if(!empty($block_data))
+                            {
+                                $option ='';
+                                $option .= '<option value="">--Select Block / Municipality--</option>';
+                                foreach($block_data as $row)
+                                {
+                                    $option .= '<option value="'.$row->block_id.'" ';
+                                    if($row->block_id == $industry_Block){$option .='selected';}
+                                    $option .= '>'.$row->block_name.'</option>';
+                                }
+                                $option_arr[] = $option;
+                                $id_arr[] = $industry_master->id;
+                            }
+                            else{
+                                $option_arr[] = '';
+                                $id_arr[] = $industry_master->id;
+                            }
+                        }else{
+                            $option_arr[] = '';
+                            $id_arr[] = $industry_master->id;
+                        }
+                    }
+                }
+            }
+        }
+
+        echo json_encode(array('msg' => $msg, 'flag' => $flag, 'option' => $option, 'id_arr' => $id_arr, 'option_arr' => $option_arr));
+
+    }
+
+    public function ajax_get_gp()
+    {
+        $msg = 0;
+        $flag = 0;
+        $option ='';
+        $option_arr = array();
+        $id_arr = array();
+
+        $gram_block_id = $this->input->post('block_id');
+        if($gram_block_id != 'dor')
+        {
+            $msg = 1;
+            $flag = 1;
+            $option .= '<option value="">--Select Gram Panchayat--</option>';
+            if($gram_block_id != ''){
+                $gram_panchayat_data = $this->main_m->get_gram_panchayat($gram_block_id);
+				/*echo '<pre>'; print_r($gram_panchayat_data); die;*/
+                if(!empty($gram_panchayat_data))
+                {
+                    foreach($gram_panchayat_data as $row)
+                    {
+                        $option .= '<option value="'.$row->panchayat_id.'">'.$row->panchayat_name.'</option>';
+                    }
+                }
+            }
+        }
+        else
+        {   
+            $msg = 1;
+            $flag = 2;
+            $sch_id = $this->session->userdata('member_scm_id');  
+            $user_id = $this->session->userdata('member_id');
+            $application_master = $this->main_m->get_application_master_data($sch_id,$user_id);
+            if(!empty($application_master)){
+                $industry_master_arr = $this->main_m->get_industry_master_data($application_master->application_id);
+                if(!empty($industry_master_arr)){
+                    foreach($industry_master_arr as $industry_master){
+                        if($industry_master->industry_Block != ''){
+                            $industry_Block = $industry_master->industry_Block;
+                            $industry_gram_panchayat = $industry_master->industry_gram_panchayat;
+                            $gram_panchayat_data = $this->main_m->get_gram_panchayat($industry_Block);
+                            if(!empty($gram_panchayat_data))
+                            {
+                                $option ='';
+                                $option .= '<option value="">--Select Gram Panchayat--</option>';
+                                foreach($gram_panchayat_data as $row)
+                                {
+                                    $option .= '<option value="'.$row->panchayat_id.'" ';
+                                    if($row->panchayat_id == $industry_gram_panchayat){$option .='selected';}
+                                    $option .= '>'.$row->panchayat_name.'</option>';
+                                }
+                                $option_arr[] = $option;
+                                $id_arr[] = $industry_master->id;
+                            }
+                            else{
+                                $option_arr[] = '';
+                                $id_arr[] = $industry_master->id;
+                            }
+                        }else{
+                            $option_arr[] = '';
+                            $id_arr[] = $industry_master->id;
+                        }
+                    }
+                }
+            }
+        }
+
+        echo json_encode(array('msg' => $msg, 'flag' => $flag, 'option' => $option, 'id_arr' => $id_arr, 'option_arr' => $option_arr));
+
+    }
+
+	public function next_button_industry(){
+        if(!empty($_POST)){
+            $yesno = trim($this->input->post("yesno"));
+            if($yesno != ''){
+				$sch_id = $this->session->userdata('member_scm_id');  
+            	$user_id = $this->session->userdata('member_id');
+                if($yesno == 'Yes'){
+                    $chk_data_exist = $this->main_m->get_applicant_details_industry_data($sch_id,$user_id);
+                    if($chk_data_exist != false){
+                        $application_id = $chk_data_exist->application_id;
+                        if ($application_id != '') {
+                            $industry_master = $this->main_m->get_industry_master_data($application_id);
+                            if($industry_master != false){
+                                $row_arr = array(
+                                    'proj_exist_industry' => 'Yes',
+                                    'proj_exist_industry_no' => count($industry_master),
+                                    'proj_step1_submit' => 1,
+                                    'proj_step1_datetime' => date('Y-m-d H:i:s')
+                                );
+                                $res = $this->main_m->update_application_master_data($row_arr,$application_id);
+                                if($res == true){
+                                    echo json_encode(array('msg' => 1, 's_msg' => ''));
+                                }
+                                else {
+                                    echo json_encode(array('msg' => 0, 'e_msg' => ''));
+                                }
+                                
+                            }
+                            else {
+                                echo json_encode(array('msg' => 0, 'e_msg' => 'Atleast add 1 Industry if you select Yes.'));
+                            }
+                        }
+                        else {
+                            echo json_encode(array('msg' => 0, 'e_msg' => ''));
+                        }
+                    }
+                    else {
+                        echo json_encode(array('msg' => 0, 'e_msg' => ''));
+                    }
+                }
+                elseif($yesno == 'No'){
+
+					$data_applicant = array(
+                        "user_id"=>$user_id,
+                        "scheme_id"=>$sch_id
+                    );
+					$chk_data_exist = $this->main_m->get_applicant_details_industry_data($sch_id,$user_id);
+                    if($chk_data_exist == false){
+                        $application_id=$this->main_m->submit_application_form($data_applicant);
+                    }else{
+                        $res_update = $this->main_m->update_application_form($sch_id,$user_id,$data_applicant);
+                        $application_id=$chk_data_exist->application_id;
+                    }
+
+                    if ($application_id != '') {
+                        $industry_master = $this->main_m->get_industry_master_data($application_id);
+                        if($industry_master != false){
+                            $is_deleted = $this->main_m->delete_all_industry_by_application_id($application_id);
+                            if($is_deleted == true){
+                                $row_arr = array(
+                                    'proj_exist_industry' => 'No',
+                                    'proj_exist_industry_no' => 0,
+                                    'proj_step1_submit' => 1,
+                                    'proj_step1_datetime' => date('Y-m-d H:i:s')
+                                );
+                                $res = $this->User_model->update_application_master_data($row_arr,$application_id);
+                                if($res == true){
+                                    echo json_encode(array('msg' => 1, 's_msg' => 'Submitted Successfully.'));
+                                }
+                                else {
+                                    echo json_encode(array('msg' => 0, 'e_msg' => 'Unable to update data.'));
+                                }
+                            }
+                            else {
+                                echo json_encode(array('msg' => 0, 'e_msg' => 'Unable to delete industry data.'));
+                            }
+                        }
+                        else 
+                        {
+                            $row_arr = array(
+                                'proj_exist_industry' => 'No',
+                                'proj_exist_industry_no' => 0,
+                                'proj_step1_submit' => 1,
+                                'proj_step1_datetime' => date('Y-m-d H:i:s')
+                            );
+                            $res = $this->main_m->update_application_master_data($row_arr,$application_id);
+                            if($res == true){
+                                echo json_encode(array('msg' => 1, 's_msg' => 'Submitted Successfully.'));
+                            }
+                            else {
+                                echo json_encode(array('msg' => 0, 'e_msg' => 'Unable to update data.'));
+                            }
+                        }
+                    }
+                    else {
+                        echo json_encode(array('msg' => 0, 'e_msg' => 'Add atleast one Industry or select No.'));
+                    }
+                }
+                else {
+                    echo json_encode(array('msg' => 0, 'e_msg' => ''));
+                }
+            }
+            else {
+                echo json_encode(array('msg' => 0, 'e_msg' => ''));
+            }
+        }
+        else {
+			redirect('dafault404');
+		}
+    }
+
+	public function delete_industry(){
+        if(!empty($_POST)){
+            $industry_id = trim($this->input->post("industry_id"));
+            if($industry_id != ''){
+                $sch_id = $this->session->userdata('member_scm_id');  
+            	$user_id = $this->session->userdata('member_id');
+                $chk_data_exist = $this->main_m->get_applicant_details_industry_data($sch_id,$user_id);
+                if($chk_data_exist != false){
+                    $application_id = $chk_data_exist->application_id;
+                    if ($application_id != '') {
+                        $industry_master = $this->main_m->get_industry_data($industry_id);
+                        if($industry_master != false){
+                            $industry_application_id = $industry_master->industry_application_id;
+                            if($industry_application_id == $application_id){
+                                $is_deleted = $this->main_m->delete_all_industry_by_industry_id($industry_id);
+                                if($is_deleted == true){
+                                    $dist_option = '<option value="">---Select---</option>';
+                                    $district_data = $this->main_m->get_district();
+                                    if($district_data != false){
+                                        foreach($district_data as $dist)
+                                        { 
+                                            $dist_option.='<option value="'.$dist->district_code.'">'.$dist->district_name.'</option>';
+                                        }
+                                    }
+                                    echo json_encode(array('msg' => 1, 's_msg' => '', 'dist_option' => $dist_option, 'industry_id' => $industry_id));
+                                }
+                                else {
+                                    echo json_encode(array('msg' => 0, 'e_msg' => ''));
+                                }
+                            }
+                            else {
+                                echo json_encode(array('msg' => 0, 'e_msg' => ''));
+                            }
+                        }
+                        else {
+                            echo json_encode(array('msg' => 0, 'e_msg' => ''));
+                        }
+                    }
+                    else {
+                        echo json_encode(array('msg' => 0, 'e_msg' => ''));
+                    }
+                }
+                else {
+                    echo json_encode(array('msg' => 0, 'e_msg' => ''));
+                }
+            }
+            else {
+                echo json_encode(array('msg' => 0, 'e_msg' => ''));
+            }
+        }
+        else {
+			redirect('dafault404');
+		}
+    }
+
+	public function delete_all_industry(){
+        if(!empty($_POST)){
+            $sch_id = $this->session->userdata('member_scm_id');  
+            $user_id = $this->session->userdata('member_id');
+            $chk_data_exist = $this->main_m->get_applicant_details_industry_data($sch_id,$user_id);
+            if($chk_data_exist != false){
+                $application_id = $chk_data_exist->application_id;
+                if ($application_id != '') {
+                    $industry_master = $this->main_m->get_industry_master_data($application_id);
+                    if($industry_master != false){
+                        $is_deleted = $this->main_m->delete_all_industry_by_application_id($application_id);
+                        if($is_deleted == true){
+
+                            $dist_option = $prod_option = '<option value="">---Select---</option>';
+                            $district_data = $this->main_m->get_district();
+                            if($district_data != false){
+                                foreach($district_data as $dist)
+                                { 
+                                    $dist_option.='<option value="'.$dist->district_code.'">'.$dist->district_name.'</option>';
+                                }
+                            }
+							$proddata = $this->db->get_where('product_master',array('prod_status'=>1))->result();
+							foreach($proddata as $prods)
+							{ 
+								$prod_option.='<option value="'.$prods->prod_id.'">'.$prods->prod_name.'</option>';
+							}
+                            echo json_encode(array('msg' => 1, 's_msg' => '', 'prod_option' => $prod_option, 'dist_option' => $dist_option));
+                        }
+                        else {
+                            echo json_encode(array('msg' => 0, 'e_msg' => ''));
+                        }
+                    }
+                    else {
+                        echo json_encode(array('msg' => 0, 'e_msg' => ''));
+                    }
+                }
+                else {
+                    echo json_encode(array('msg' => 0, 'e_msg' => ''));
+                }
+            }
+            else {
+                echo json_encode(array('msg' => 0, 'e_msg' => ''));
+            }
+        }
+        else {
+			redirect('dafault404');
+		}
+    }
+
+	public function ajax_add_industry(){
+        if(!empty($_POST))
+        {
+            // echo '<pre>'; print_r($_POST); die;
+            $yesno = trim($this->input->post("yesno"));
+            // echo $yesno; die;
+
+            $this->form_validation->set_rules('yesno', 'Industry Name', 'trim|required');
+            $this->form_validation->set_rules('industry_name', 'Industry Name', 'trim|required');
+            $this->form_validation->set_rules('industry_location', 'Industry Location', 'trim|required');
+            $this->form_validation->set_rules('industry_product', 'Industry Product', 'trim|required|is_natural_no_zero');
+            $this->form_validation->set_rules('industry_Address', 'Industry Address', 'trim|required');
+            $this->form_validation->set_rules('industry_Address2', 'Industry Address', 'trim|required');
+            $this->form_validation->set_rules('district_code', 'District', 'trim|required');
+            $this->form_validation->set_rules('industry_sub_division', 'Industry Sub Division', 'trim|required');
+            $this->form_validation->set_rules('block_code', 'Industry Block', 'trim|required');
+            $this->form_validation->set_rules('gram_panchayat', 'Gram Panchayat', 'trim|required');
+            $this->form_validation->set_rules('vilage_id', 'Village', 'trim|required');
+            $this->form_validation->set_rules('industry_Police_Station', 'Industry Police Station', 'trim|required');
+            $this->form_validation->set_rules('industry_Pincode', 'Industry Pincode', 'trim|required');
+            
+            if($this->form_validation->run() == TRUE)
+            {
+                if($yesno=='Yes')
+                {
+                    /* ============== Transaction Begin ============== */
+                    $this->db->trans_begin();
+
+                    $sch_id = $this->session->userdata('member_scm_id');  
+           			$user_id = $this->session->userdata('member_id');
+
+                    /*$getUserDist = $this->main_m->get_user_dist_code($sch_id,$user_id);
+
+                    if($getUserDist == false){
+                        $getUserDistVal = null;
+                    }
+                    else{
+                        $getUserDistVal = $getUserDist->district;
+                    }*/
+
+                    $data_applicant = array(
+                        "user_id"=>$user_id,
+                        "scheme_id"=>$sch_id
+                        //"proj_district"=>$getUserDistVal
+                    );
+
+                    $chk_data_exist = $this->main_m->get_applicant_details_industry_data($sch_id,$user_id);
+                    if($chk_data_exist == false){
+                        $application_id=$this->main_m->submit_application_form($data_applicant);
+                    }else{
+                        $res_update = $this->main_m->update_application_form($sch_id,$user_id,$data_applicant);
+                        $application_id=$chk_data_exist->application_id;
+                    }
+                    
+                    if($application_id != '') {
+                        $industry_arr['industry_application_id']=$application_id;
+                        $industry_arr['industry_name']=trim($this->input->post("industry_name"));
+                        $industry_arr['industry_location']=trim($this->input->post("industry_location"));
+                        $industry_arr['industry_product']=trim($this->input->post("industry_product"));
+                        $industry_arr['industry_Address']=trim($this->input->post("industry_Address"));
+                        $industry_arr['industry_Address2']=trim($this->input->post("industry_Address2"));
+                        $industry_arr['industry_district']=trim($this->input->post("district_code"));
+                        $industry_arr['industry_Sub_Division']=trim($this->input->post("industry_sub_division"));
+                        $industry_arr['industry_Block']=trim($this->input->post("block_code"));
+                        $industry_arr['industry_gram_panchayat']=trim($this->input->post("gram_panchayat"));
+                        $industry_arr['industry_village']=trim($this->input->post("vilage_id"));
+                        $industry_arr['industry_Police_Station']=trim($this->input->post("industry_Police_Station"));
+                        $industry_arr['industry_Pincode']=trim($this->input->post("industry_Pincode"));
+
+                        $industry_id = $this->main_m->industry_insert($industry_arr);                               
+                    
+                        if($industry_id != false) {
+
+                            $indus = $this->main_m->get_industry_data($industry_id);
+
+                            if($indus != false) {
+
+                                $table_row = '';
+
+                                $table_row.='<tr id="industry_tr_'.$indus->industry_id.'"><td>'.$indus->industry_name.'</td><td>'.$indus->industry_location.'</td><td>'.$indus->prod_name.'</td><td>'.$indus->industry_Address.'</td><td>'.$indus->industry_Address2.'</td><td>'.$indus->district_name.'</td><td>'.$indus->subdiv_name.'</td><td>'.$indus->block_name.'</td><td>'.$indus->panchayat_name.'</td><td>'.$indus->industry_village.'</td><td>'.$indus->industry_Police_Station.'</td><td>'.$indus->industry_Pincode.'</td><td><a href="javascript:void(0);" class="text-danger" onclick="delete_industry('.$indus->industry_id.');"><i class="fa fa-trash"></i></a></td></tr>';
+                         
+                                if($table_row != ''){
+
+                                    $dist_option = $prod_option = '<option value="">---Select---</option>';
+                                    $district_data = $this->main_m->get_district();
+                                    if($district_data != false){
+                                        foreach($district_data as $dist)
+                                        { 
+                                            $dist_option.='<option value="'.$dist->district_code.'">'.$dist->district_name.'</option>';
+                                        }
+                                    }
+									$proddata = $this->db->get_where('product_master',array('prod_status'=>1))->result();
+									foreach($proddata as $prods)
+									{ 
+										$prod_option.='<option value="'.$prods->prod_id.'">'.$prods->prod_name.'</option>';
+									}
+                                    $this->db->trans_commit();
+                                    echo json_encode(array('msg' => 1, 's_msg' => '', 'table_row' => $table_row, 'prod_option' => $prod_option, 'dist_option' => $dist_option));
+                                }
+                                else {
+                                    $this->db->trans_rollback();
+                                    echo json_encode(array('msg' => 0, 'e_msg' => 'There have some problem to retrieve Data, Try again.'));
+                                }
+                            }
+                            else {
+                                $this->db->trans_rollback();
+                                echo json_encode(array('msg' => 0, 'e_msg' => 'There have some problem to retrieve Data, Try again.'));
+                            }
+                        }
+                        else {
+                            $this->db->trans_rollback();
+                            echo json_encode(array('msg' => 0, 'e_msg' => 'There have some problem to insert Data, Try again.'));
+                        }
+                    }
+                    else {
+						$this->db->trans_rollback();
+						echo json_encode(array('msg' => 0, 'e_msg' => 'There have some problem to retrieve Data, Try again.'));
+					}
+                }
+                else
+                {
+                    echo json_encode(array('msg' => 0, 'e_msg' => 'You should select Yes, Try again.'));
+                    
+                }
+                
+                
+            }
+            else
+            {
+                echo json_encode(array('msg' => 0, 'e_msg' => validation_errors()));
+            }      
+        }
+        else 
+        {
+			redirect('dafault404');
+		}
+    }
+
+	public function proj_cost_details(){
+		$projsets = $this->db->select('*')->from('application_master')->where(array('user_id'=>$this->session->userdata('member_id'),'scheme_id'=>$this->session->userdata('member_scm_id')))->get()->row();
+		if($projsets->proj_step1_submit != 1){
+			redirect('userset/exist_project_details');
+		}elseif($projsets->proj_step2_submit != 1){
+			redirect('userset/project_details');
+		}elseif($projsets->proj_step3_submit == 1){
+			redirect('userset/proj_document_details');
+		}elseif($projsets->is_applicant_submitted == 2){
+			redirect('userset/applicant_dashboard');
+		}
+		$application_id = $this->data['application_id'] = $projsets->application_id;
+        $this->data['project_data']=$projsets;
+        $this->data['machine_data'] = $machine_data = $this->main_m->get_applicant_plant_machinery_data_by_application($projsets->application_id);
+		$table_row = '';
+		$tablewise_cost = 0;
+        if($machine_data != false){
+            foreach($machine_data as $pm){
+                $table_row.='<tr id="plant_machinery_tr_'.$pm->pm_id.'"><td>'.$pm->pm_machine_name.'</td><td>'.$pm->pm_manufacturer_name.'</td><td>'.$pm->pm_serial_no.'</td><td>'.$pm->pm_model_no.'</td><td>'.$pm->pm_machine_type.'</td><td>'.$pm->pm_cost.'</td><td>'.$pm->pm_capacity.'</td><td>'.$pm->project_cost_unit.'</td><td><a href="javascript:void(0);" class="text-danger" onclick="delete_plant_machinary('.$pm->pm_id.');"><i class="fa fa-trash"></i></a></td></tr>';
+				$tablewise_cost = $tablewise_cost + $pm->pm_cost;
+            }
+        }
+        $this->data['table_row'] = $table_row;
+        $this->data['table_totalcost'] = $tablewise_cost;
+        $this->data['project_unit']=$this->db->select('*')->from('project_cost_unit_info')->get()->result();
+		$this->load->view('main/citizen/project_cost',$this->data);
+	}
+
+	public function update_projectcost_set_details(){
+		if($_POST){
+	  
+	 		$proj_land_building_cost = $this->input->post('proj_land_building_cost');
+			$proj_plant_machinary_cost = $this->input->post('proj_plant_machinary_cost');
+			$proj_misc_fixed_assets = $this->input->post('proj_misc_fixed_assets');
+			$proj_preli_preopearative_expenses = $this->input->post('proj_preli_preopearative_expenses');
+			$proj_contingencies_etc = $this->input->post('proj_contingencies_etc');
+			$proj_working_capital_margin = $this->input->post('proj_working_capital_margin');
+			$proj_others = $this->input->post('proj_others');
+			$proj_total_project_cost = $this->input->post('proj_total_project_cost');
+
+			$proj_promoter_contribution = $this->input->post('proj_promoter_contribution');
+			$proj_term_loan_from_bank = $this->input->post('proj_term_loan_from_bank');
+			$proj_finance_others = $this->input->post('proj_finance_others');
+			$proj_total_means_of_finance = $this->input->post('proj_total_means_of_finance');
+
+			$proj_working_capital = $this->input->post('proj_working_capital');
+			$proj_subsity_claimed = $this->input->post('proj_subsity_claimed');
+
+			$proj_indirect_male = $this->input->post('proj_indirect_male');
+			$proj_indirect_female = $this->input->post('proj_indirect_female');
+			$proj_direct_male = $this->input->post('proj_direct_male');
+			$proj_direct_female = $this->input->post('proj_direct_female');
+		
+			$this->form_validation->set_rules('proj_land_building_cost', 'Land & Buiding Cost', 'trim|required|numeric');
+			$this->form_validation->set_rules('proj_plant_machinary_cost', 'Plant and Machineries Cost', 'trim|required|numeric');
+			$this->form_validation->set_rules('proj_misc_fixed_assets', 'Misc. Fixed Assets', 'trim|required|numeric');
+			$this->form_validation->set_rules('proj_preli_preopearative_expenses', 'Preli. & Pre-Operative Expenses', 'trim|required|numeric');
+			$this->form_validation->set_rules('proj_contingencies_etc', 'Contingencies etc.', 'trim|required|numeric');
+			$this->form_validation->set_rules('proj_working_capital_margin', 'Working Capital Margin', 'trim|required|numeric');
+			$this->form_validation->set_rules('proj_others', 'Others Cost', 'trim|required|numeric');
+			$this->form_validation->set_rules('proj_total_project_cost', 'Total Project Cost', 'trim|required|numeric');
+
+			$this->form_validation->set_rules('proj_promoter_contribution', 'Promoters\' Contribution', 'trim|required|numeric');
+			$this->form_validation->set_rules('proj_term_loan_from_bank', 'Term loan from bank / F.I.', 'trim|required|numeric');
+			$this->form_validation->set_rules('proj_finance_others', 'Others Finance', 'trim|required|numeric');
+			$this->form_validation->set_rules('proj_total_means_of_finance', 'Total Means of Finance', 'trim|required|numeric');
+			
+			$this->form_validation->set_rules('proj_working_capital', 'Working Capital', 'trim|required|numeric');
+			$this->form_validation->set_rules('proj_subsity_claimed', 'Subsidy claimed under WBFCIS - 2021', 'trim|required|numeric');
+			
+			$this->form_validation->set_rules('proj_indirect_male', 'Indirect Male', 'trim|required|is_natural');
+			$this->form_validation->set_rules('proj_indirect_female', 'Indirect Female', 'trim|required|is_natural');
+			$this->form_validation->set_rules('proj_direct_male', 'Direct Male', 'trim|required|is_natural');
+			$this->form_validation->set_rules('proj_direct_female', 'Direct Female', 'trim|required|is_natural');
+			
+			if ($this->form_validation->run()) {
+
+				$application_id = $this->db->select('*')->from('application_master')->where(array('user_id'=>$this->session->userdata('member_id'),'scheme_id'=>$this->session->userdata('member_scm_id')))->get()->row()->application_id;
+				//$application_id = $this->data['application_id'] = $projsets;
+				$machinary_sets = $this->main_m->get_applicant_plant_machinery_data_by_application($application_id);
+
+				if(count((array)$machinary_sets) > 0){
+
+					////////////////
+					$row_arr = array(
+						'proj_land_building_cost' => $proj_land_building_cost,
+						'proj_plant_machinary_cost' => $proj_plant_machinary_cost,
+						'proj_misc_fixed_assets' => $proj_misc_fixed_assets,
+						'proj_contingencies_etc' => $proj_contingencies_etc,
+						'proj_others' => $proj_others,
+						'proj_preli_preopearative_expenses' => $proj_preli_preopearative_expenses,
+						'proj_working_capital_margin' => $proj_working_capital_margin,
+						'proj_total_project_cost' => $proj_total_project_cost,
+						'proj_promoter_contribution' => $proj_promoter_contribution,
+						'proj_finance_others' => $proj_finance_others,
+						'proj_term_loan_from_bank' => $proj_term_loan_from_bank,
+						'proj_total_means_of_finance' => $proj_total_means_of_finance,
+						'proj_working_capital' => $proj_working_capital,
+						'proj_subsity_claimed' => $proj_subsity_claimed,
+						'proj_indirect_male' => $proj_indirect_male,
+						'proj_indirect_female' => $proj_indirect_female,
+						'proj_direct_male' => $proj_direct_male,
+						'proj_direct_female' => $proj_direct_female,
+						'proj_step3_submit' => 1,
+						'proj_step3_datetime' => date('Y-m-d H:i:s')
+					);
+
+					$projsets = $this->db->select('*')->from('application_master')->where(array('user_id'=>$this->session->userdata('member_id'),'scheme_id'=>$this->session->userdata('member_scm_id')))->get()->row();
+					if(empty($projsets->application_no)){
+						$dist_sortname = $this->db->get_where('district_master', array('district_code'=>$projsets->proj_district))->row()->district_sortname;
+						$date=date("dmY");
+						$c_year = date('y');
+						$current_month = date('m');
+						$p_yr = date('y', strtotime('-1 year'));
+						$n_yr = date('y', strtotime('+1 year'));
+						if($current_month > 0 && $current_month < 4){
+							$f_year = $p_yr.'-'.$c_year;
+						}else{
+							$f_year = $c_year.'-'.$n_yr;
+						}
+						$makerchk_string = 'DFPI/'.$dist_sortname.'/'.$f_year.'/'.$date;
+						$countquery = $this->db->query('SELECT * FROM application_master WHERE application_no LIKE "'.$makerchk_string.'%"');
+						$getcount_application = $countquery->num_rows();
+						$appid = $getcount_application + 1;
+						$application_no_generate = $makerchk_string.'/'.str_pad($appid,4,'0',STR_PAD_LEFT);
+						$row_arr['application_no'] = $application_no_generate;
+					}
+
+					if ($this->main_m->submit_project_details($this->session->userdata('member_id'), $this->session->userdata('member_scm_id'), $row_arr) == true) {
+						echo json_encode(array('msg' => 1));
+					} else {
+						echo json_encode(array('msg' => 0, 'e_msg' => 'There have some DB Updation Problem, Try again.'));
+					}
+					//////////////////////////
+
+				}else{
+					echo json_encode(array('msg' => 0, 'e_msg' => 'Atleast 1 Plant & Machinery Need to Add, Please Check.'));
+				}
+			} else {
+				echo json_encode(array('msg' => 0, 'e_msg' => validation_errors()));
+			}
+			exit;
+
+		}else{
+			redirect('default404');
+		}
+	}
+
+	public function ajax_add_machine(){
+        if(!empty($_POST))
+        {
+            $this->form_validation->set_rules('machine_name', 'Machine name', 'trim|required');
+            $this->form_validation->set_rules('manufacturer_name', 'Manufacturer Name', 'trim|required');
+            $this->form_validation->set_rules('serial_no', 'Serial No', 'trim|required');
+            $this->form_validation->set_rules('model_no', 'Model No', 'trim|required');
+            $this->form_validation->set_rules('machine_type', 'Machine Type', 'trim|required');
+            $this->form_validation->set_rules('cost', 'Cost', 'trim|required|numeric');
+            $this->form_validation->set_rules('capacity', 'Capacity', 'trim|required|numeric');
+            $this->form_validation->set_rules('proj_measuring_unit', 'Unit', 'trim|required|numeric');
+            
+            if($this->form_validation->run() == TRUE)
+            {
+                /* ============== Transaction Begin ============== */
+                $this->db->trans_begin();
+
+                $sch_id = $this->session->userdata('member_scm_id');  
+                $user_id = $this->session->userdata('member_id');
+                $chk_data_exist = $this->main_m->get_applicant_details_industry_data($sch_id,$user_id);
+                $application_id = $chk_data_exist->application_id;
+                
+                if($application_id != '') {
+                    $machine_arr['pm_application_id'] = $application_id;
+                    $machine_arr['pm_machine_name'] = trim($this->input->post("machine_name"));
+                    $machine_arr['pm_manufacturer_name'] = trim($this->input->post("manufacturer_name"));
+                    $machine_arr['pm_serial_no'] = trim($this->input->post("serial_no"));
+                    $machine_arr['pm_model_no'] = trim($this->input->post("model_no"));
+                    $machine_arr['pm_machine_type'] = trim($this->input->post("machine_type"));
+                    $machine_arr['pm_cost'] = trim($this->input->post("cost"));
+                    $machine_arr['pm_capacity'] = trim($this->input->post("capacity"));
+                    $machine_arr['pm_measuring_unit'] = trim($this->input->post("proj_measuring_unit"));
+                    $machine_arr['pm_createdate'] = date('Y-m-d H:i:s');
+                    $machine_arr['pm_status'] = 1;
+
+                    $pm_id = $this->main_m->mapplicant_plant_machinary_insert($machine_arr);
+                
+                    if($pm_id != false) {
+
+                        $pm = $this->main_m->get_applicant_plant_machinery_data_by_pm_id($pm_id);
+
+                        if($pm != false) {
+
+                            $table_row = '';
+
+                            $table_row.='<tr id="plant_machinery_tr_'.$pm->pm_id.'"><td>'.$pm->pm_machine_name.'</td><td>'.$pm->pm_manufacturer_name.'</td><td>'.$pm->pm_serial_no.'</td><td>'.$pm->pm_model_no.'</td><td>'.$pm->pm_machine_type.'</td><td>'.$pm->pm_cost.'</td><td>'.$pm->pm_capacity.'</td><td>'.$pm->project_cost_unit.'</td><td><a href="javascript:void(0);" class="text-danger" onclick="delete_plant_machinary('.$pm->pm_id.');"><i class="fa fa-trash"></i></a></td></tr>';
+                        
+                            if($table_row != ''){
+
+                                $machine_type_option = '<option value="">---Select---</option><option value="Imported">Imported</option><option value="Indigenous">Indigenous</option><option value="Assembled / Fabricated">Assembled / Fabricated</option>';
+
+                                $project_unit_option = '<option value="">---Select---</option>';
+                                $project_unit = $this->db->select('*')->from('project_cost_unit_info')->get()->result();
+                                if($project_unit != false){
+                                    foreach($project_unit as $unit)
+                                    { 
+                                        $project_unit_option.='<option value="'.$unit->id.'">'.$unit->project_cost_unit.'</option>';
+                                    }
+                                }
+
+                                $this->db->trans_commit();
+                                echo json_encode(array('msg' => 1, 's_msg' => '', 'table_row' => $table_row, 'machine_type_option' => $machine_type_option, 'project_unit_option' => $project_unit_option));
+                            }
+                            else {
+                                $this->db->trans_rollback();
+                                echo json_encode(array('msg' => 0, 'e_msg' => 'There have some problem to retrieve Data, Try again.'));
+                            }
+                        }
+                        else {
+                            $this->db->trans_rollback();
+                            echo json_encode(array('msg' => 0, 'e_msg' => 'There have some problem to retrieve Data, Try again.'));
+                        }
+                    }
+                    else {
+                        $this->db->trans_rollback();
+                        echo json_encode(array('msg' => 0, 'e_msg' => 'There have some problem to insert Data, Try again.'));
+                    }
+                }
+                else {
+                    $this->db->trans_rollback();
+                    echo json_encode(array('msg' => 0, 'e_msg' => 'There have some problem to retrieve Data, Try again.'));
+                }
+            }
+            else {
+                echo json_encode(array('msg' => 0, 'e_msg' => validation_errors()));
+            }      
+        }
+        else {
+			redirect('dafault404');
+		}
+    }
+
+	public function delete_plant_machinary(){
+        if(!empty($_POST)){
+            $pm_id = trim($this->input->post("mc_id"));
+            if($pm_id != ''){
+                $sch_id = $this->session->userdata('member_scm_id');  
+                $user_id = $this->session->userdata('member_id');
+                $chk_data_exist = $this->main_m->get_applicant_details_industry_data($sch_id,$user_id);
+                if($chk_data_exist != false){
+                    $application_id = $chk_data_exist->application_id;
+                    if ($application_id != '') {
+                        $pm_data = $this->main_m->get_applicant_plant_machinery_data_by_pm_id($pm_id);
+                        if($pm_data != false){
+                            $pm_application_id = $pm_data->pm_application_id;
+                            if($pm_application_id == $application_id){
+                                $is_deleted = $this->main_m->delete_plant_machinery_by_pm_id($pm_id);
+                                if($is_deleted == true){
+                                    
+                                    echo json_encode(array('msg' => 1, 's_msg' => '', 'mc_id' => $pm_id, 'mc_cost' => $pm_data->pm_cost));
+                                }
+                                else {
+                                    echo json_encode(array('msg' => 0, 'e_msg' => ''));
+                                }
+                            }
+                            else {
+                                echo json_encode(array('msg' => 0, 'e_msg' => ''));
+                            }
+                        }
+                        else {
+                            echo json_encode(array('msg' => 0, 'e_msg' => ''));
+                        }
+                    }
+                    else {
+                        echo json_encode(array('msg' => 0, 'e_msg' => ''));
+                    }
+                }
+                else {
+                    echo json_encode(array('msg' => 0, 'e_msg' => ''));
+                }
+            }
+            else {
+                echo json_encode(array('msg' => 0, 'e_msg' => ''));
+            }
+        }
+        else {
+			redirect('dafault404');
+		}
+    }
+
+	public function proj_document_details(){
+		$projsets = $this->db->select('*')->from('application_master')->where(array('user_id'=>$this->session->userdata('member_id'),'scheme_id'=>$this->session->userdata('member_scm_id')))->get()->row();
+		if($projsets->proj_step1_submit != 1){
+			redirect('userset/exist_project_details');
+		}elseif($projsets->proj_step2_submit != 1){
+			redirect('userset/project_details');
+		}elseif($projsets->proj_step3_submit != 1){
+			redirect('userset/proj_cost_details');
+		}elseif($projsets->proj_step4_submit == 1){
+			redirect('userset/applicant_dashboard');
+		}elseif($projsets->is_applicant_submitted == 2){
+			redirect('userset/applicant_dashboard');
+		}
+		$application_id = $this->data['application_id'] = $projsets->application_id;
+        //$this->data['project_data']=$projsets;
+        $this->data['document_upload_master_data'] = $this->main_m->get_document_upload_master_data();
+        $this->data['document_upload_set'] = $this->main_m->get_document_upload_master_data_via_appid($application_id);
+        $this->data['applicant_essential_data'] = $projsets;
+        $this->load->view('main/citizen/documents_list',$this->data);
+            
+	}
+
+	public function update_alldocument_details(){
+		if($_POST){
+			$document_upload_master_data = $this->main_m->get_document_upload_master_data();
+			$application_id = $this->input->post('application_id');
+			/*$proj_prod_manufacture = $this->input->post('proj_prod_manufacture');
+			$docexist = $this->input->post('docexist');
+			$has_yesno = $this->input->post('has_yesno');*/
+
+			$this->form_validation->set_rules('application_id', 'Application No.', 'trim|is_natural|required');
+			foreach($document_upload_master_data as $alldocs_chkbox){
+				$this->form_validation->set_rules('is_submitted_'.$alldocs_chkbox->doc_file_name, 'Document RadioBox', 'trim|required|alpha');
+			}
+			/*$this->form_validation->set_rules('proj_daag_no', 'Daag No', 'trim|required');
+			$this->form_validation->set_rules('proj_technology', 'Technology', 'trim|required|alpha');
+			$this->form_validation->set_rules('proj_plant_capacity', 'Capacity of the Plant', 'trim|required|alpha');
+			$this->form_validation->set_rules('proj_branch', 'Branch', 'trim|required|is_natural');
+			$this->form_validation->set_rules('proj_ifsc', 'IFSC', 'trim|required|alpha_numeric');
+			$this->form_validation->set_rules('proj_acc_no', 'J.L. No', 'trim|required|numeric');
+			$this->form_validation->set_rules('proj_pan_no', 'Land Type', 'trim|required|alpha_numeric');
+			$this->form_validation->set_rules('has_yesno', 'Current Status', 'trim|required|alpha');*/
+			
+			if ($this->form_validation->run()) {
+				
+				$this->load->helper('file_upload');
+				$error_section = 1;
+				$error_received = '';
+				
+				$document_upload_set = $this->main_m->get_document_upload_master_data_via_appid($application_id);
+
+				foreach($document_upload_master_data as $alldocs){
+					
+					$file_doc = $alldocs->doc_file_name;
+					$has_yesno = $this->input->post('is_submitted_'.$file_doc);
+					if (isset($_FILES[$file_doc]) && !empty($_FILES[$file_doc])) {
+						$upload_info = upload_file($_FILES[$file_doc], "uploads/documents_list", uniqid($file_doc.'_'), array('jpg', 'jpeg', 'JPG', 'JPEG' , 'PNG' , 'png', 'pdf', 'PDF'));
+						if ($upload_info['error']) {
+							$error_section++;
+							$error_received = $error_received. $alldocs->doc_label.' - '.$upload_info['status'].'<br/>';
+							//$fu_dob_doc = '';
+						} else {
+							//delete_file("upload_file/" . $userdetails->f_applied_for . "/candidates/" . $userdetails->f_application_no . "/" . $userdetails->fu_dob_doc);
+							$docupdate = $upload_info['result_path'];
+							$rowsets = array(
+								'file_application_id' => $application_id,
+								'file_document_ms' => $alldocs->doc_id,
+								'file_name' => $docupdate,
+								'file_createdate' => date('Y-m-d H:i:s')
+							);
+							$fileupid = NULL;
+							foreach($document_upload_set as $upitem_doc){
+								if($alldocs->doc_id == $upitem_doc->doc_id){
+									if($upitem_doc->file_name != ""){
+										$fileupid = $upitem_doc->file_id;
+										break;
+									}
+								}
+							}
+							if($this->main_m->alldocfiles_insert_update($rowsets, $fileupid) == FALSE){
+								$error_section++;
+								$error_received = $error_received. $alldocs->doc_label.' - File Updation error in DB. Try Again.<br/>';
+							}
+						}
+					}else{
+						if($has_yesno == "No"){
+							$fileupid = NULL;
+							foreach($document_upload_set as $upitem_doc){
+								if($alldocs->doc_id == $upitem_doc->doc_id){
+									if($upitem_doc->file_name != ""){
+										$fileupid = $upitem_doc->file_id;
+										break;
+									}
+								}
+							}
+							if($fileupid != NULL){
+								if (!$this->db->delete('document_master', array('file_id' => $fileupid))) {
+									$error_section++;
+									$error_received = $error_received. $alldocs->doc_label.' - File Deletion error from DB. Try Again.<br/>';
+								}
+							}
+						}
+					}
+				}
+				if($error_section == 1){
+					$projsets = $this->db->select('*')->from('application_master')->where(array('user_id'=>$this->session->userdata('member_id'),'scheme_id'=>$this->session->userdata('member_scm_id')))->get()->row();
+					////////////////
+					$row_arr = array(
+						'proj_step4_submit' => 1,
+						'is_applicant_submitted' => 2,
+						'proj_final_status' => 8,
+						'proj_step4_datetime' => date('Y-m-d H:i:s')
+					);
+					if(empty($projsets->application_no)){
+						$dist_sortname = $this->db->get_where('district_master', array('district_code'=>$projsets->proj_district))->row()->district_sortname;
+						$date=date("dmY");
+						$c_year = date('y');
+						$current_month = date('m');
+						$p_yr = date('y', strtotime('-1 year'));
+						$n_yr = date('y', strtotime('+1 year'));
+						if($current_month > 0 && $current_month < 4){
+							$f_year = $p_yr.'-'.$c_year;
+						}else{
+							$f_year = $c_year.'-'.$n_yr;
+						}
+						$makerchk_string = 'DFPI/'.$dist_sortname.'/'.$f_year.'/'.$date;
+						$countquery = $this->db->query('SELECT * FROM application_master WHERE application_no LIKE "'.$makerchk_string.'%"');
+						$getcount_application = $countquery->num_rows();
+						$appid = $getcount_application + 1;
+						$application_no_generate = $makerchk_string.'/'.str_pad($appid,4,'0',STR_PAD_LEFT);
+						$row_arr['application_no'] = $application_no_generate;
+					}
+
+					if ($this->main_m->submit_project_details($this->session->userdata('member_id'), $this->session->userdata('member_scm_id'), $row_arr) == true) {
+						echo json_encode(array('msg' => 1));
+					} else {
+						echo json_encode(array('msg' => 0, 'e_msg' => 'There have some DB Updation Problem, Try again.'));
+					}
+					//////////////////////////
+				}else{
+					echo json_encode(array('msg' => 0, 'e_msg' => 'File Upload Problem occured, Check Again.<br/>'.$error_received));
+				}
+
+			} else {
+				echo json_encode(array('msg' => 0, 'e_msg' => validation_errors()));
+			}
+			exit;
+
+		}else{
+			redirect('default404');
+		}
+	}
+
+	public function goto_prev_step_aftercheck($stepid = NULL){
+		if($stepid == NULL || $stepid > 3 || $stepid < 1){
+			redirect('dafault404');
+		}
+		$projsets = $this->db->select('*')->from('application_master')->where(array('user_id'=>$this->session->userdata('member_id'),'scheme_id'=>$this->session->userdata('member_scm_id')))->get()->row();
+		if(empty($projsets)){
+			redirect('dafault404');
+		}
+
+		if($projsets->is_applicant_submitted == 1){
+			if($stepid == 3){
+				if($projsets->proj_step1_submit == 1 && $projsets->proj_step2_submit == 1 && $projsets->proj_step3_submit == 1){
+					////////////////
+					$row_arr = array(
+						'proj_step3_submit' => 0
+					);
+					if ($this->main_m->submit_project_details($this->session->userdata('member_id'), $this->session->userdata('member_scm_id'), $row_arr) == true) {
+						redirect('userset/proj_cost_details');
+					}else{
+						redirect('userset/proj_document_details');
+					}
+				}else{
+					redirect('userset/proj_document_details');
+				}
+			}elseif($stepid == 2){
+				if($projsets->proj_step1_submit == 1 && $projsets->proj_step2_submit == 1 && $projsets->proj_step3_submit != 1){
+					////////////////
+					$row_arr = array(
+						'proj_step2_submit' => 0
+					);
+					if ($this->main_m->submit_project_details($this->session->userdata('member_id'), $this->session->userdata('member_scm_id'), $row_arr) == true) {
+						redirect('userset/project_details');
+					}else{
+						redirect('userset/proj_cost_details');
+					}
+				}else{
+					redirect('userset/proj_cost_details');
+				}	
+			}elseif($stepid == 1){
+				if($projsets->proj_step1_submit == 1 && $projsets->proj_step2_submit != 1 && $projsets->proj_step3_submit != 1){
+					////////////////
+					$row_arr = array(
+						'proj_step1_submit' => 0
+					);
+					if ($this->main_m->submit_project_details($this->session->userdata('member_id'), $this->session->userdata('member_scm_id'), $row_arr) == true) {
+						redirect('userset/exist_project_details');
+					}else{
+						redirect('userset/project_details');
+					}
+				}else{
+					redirect('userset/project_details');
+				}
+			}
+		}else{
+			redirect('dafault404');
+		}
+	}
+
+	public function applicantion_form_details($application_id)
+	{
+		if($application_id == "" || $application_id == NULL){
+			redirect('dafault404');
+		}
+		$this->load->model('admin_m');
+		$this->data['app_data'] = $this->admin_m->get_application_master_data($application_id);
+		//echo $this->db->last_query();exit;
+		//print_r($this->data['app_data']);exit;
+		$this->data['industry_data']=$this->admin_m->get_industry_master_data('',$application_id);
+		$this->data['pm_data']=$this->admin_m->get_plant_machinary_data($application_id);
+		$this->data['document_upload_master_data'] = $this->admin_m->get_document_upload_master_data();
+		$this->data['document_upload_set'] = $this->main_m->get_document_upload_master_data_via_appid($application_id);
+		$this->data['application_id'] = $application_id;
+		$this->load->view('main/citizen/common_citizen_form_details_view',$this->data);
+	}
+
+	public function sanction_letter_upload($application_id){
+		if($application_id == "" || $application_id == NULL){
+			redirect('dafault404');
+		}
+		if ($_POST) {
+			// echo "<pre>";
+			// print_r($_POST);
+			// print_r($_FILES); die;
+		
+			$application_id = $this->input->post( 'application_id' );
+			$user_id = $this->input->post( 'user_id' );
+			$sch_id = $this->input->post( 'sch_id' );
+		
+		
+			$path = 'uploads/sanction_letter_doc/';
+			$time = time();
+		
+			if ( !empty( $_FILES[ 'bond' ] ) && $_FILES[ "bond" ][ "tmp_name" ] != '' ) {
+				$chk_data = $this->db->query( "SELECT * FROM application_master WHERE application_id='$application_id' " );
+				$img_bond = $time . '_' . $_FILES[ 'bond' ][ 'name' ];
+				$upload_bod_path = $path . $img_bond;
+				move_uploaded_file( $_FILES[ 'bond' ][ 'tmp_name' ], $upload_bod_path );
+			
+				if ( $chk_data->num_rows() > 0 ) {
+					$query = $this->db->query( "UPDATE application_master SET bond ='$img_bond' WHERE application_id='$application_id' " );
+				}
+				
+			}
+			if ( !empty( $_FILES[ 'ca_certificate' ] ) && $_FILES[ "ca_certificate" ][ "tmp_name" ] != '' ) {
+				$chk_data = $this->db->query( "SELECT * FROM application_master WHERE application_id='$application_id' " );
+				$img_ca = $time . '_' . $_FILES[ 'ca_certificate' ][ 'name' ];
+				$upload_ca_path = $path . $img_ca;
+				move_uploaded_file( $_FILES[ 'ca_certificate' ][ 'tmp_name' ], $upload_ca_path );
+			
+				if ( $chk_data->num_rows() > 0 ) {
+					$query = $this->db->query( "UPDATE application_master SET ca_certificate ='$img_ca' WHERE application_id='$application_id'" );
+				}
+				
+			}
+			if ( !empty( $_FILES[ 'bank_cerificate' ] ) && $_FILES[ "bank_cerificate" ][ "tmp_name" ] != '' ) {
+
+				$chk_data = $this->db->query( "SELECT * FROM application_master WHERE application_id='$application_id' " );
+				$img_bank_cerificate = $time . '_' . $_FILES[ 'bank_cerificate' ][ 'name' ];
+				$upload_bcert_path = $path . $img_bank_cerificate;
+				move_uploaded_file( $_FILES[ 'bank_cerificate' ][ 'tmp_name' ], $upload_bcert_path );
+			
+				if ( $chk_data->num_rows() > 0 ) {
+					$query = $this->db->query( "UPDATE application_master SET bank_cerificate ='$img_bank_cerificate' WHERE application_id='$application_id' " );
+				}
+			
+			}
+			$btn_submit= strtolower($this->input->post('btn_submit'));
+			if(($_FILES["bond"]["tmp_name"]!='' && $_FILES["ca_certificate"]["tmp_name"]!='' && $_FILES["bank_cerificate"]["tmp_name"]!="") && $btn_submit=='submit')
+			{
+				if($btn_submit == 'submit'){
+					$apply_for_1st_installment_release=1;
+					$is_first_sanction=0;
+					$res=$this->main_m->update_application_master_data(['apply_for_1st_installment_release'=>$apply_for_1st_installment_release,'is_first_sanction'=>$is_first_sanction], $application_id);
+					
+					/*Surojit added start*/
+					$data_remarks = array(
+						'application_id'=>$application_id,
+						'user_id'=>$user_id,
+						'remarks'=>'Sanction letter supporting documents uploaded by Applicant',
+						'remark_stat'=>16,
+						'add_datetime'=>date('Y-m-d H:i:s')
+					);
+					$remark_id = $this->main_m->add_remarks($data_remarks);
+					
+					if($_FILES['bond']['tmp_name']!=''){
+						$all_remarks_attachment_data = array(
+							'remark_id'=>$remark_id,
+							'application_id'=>$application_id,
+							'fileAttachment'=>trim($upload_bod_path),
+							'user_id'=>$user_id,
+							'date_time'=>date('Y-m-d H:i:s')
+						);
+						$this->main_m->add_remarks_attachment($all_remarks_attachment_data);
+					}
+					if($_FILES['ca_certificate']['tmp_name']!=''){
+						$all_remarks_attachment_data = array(
+							'remark_id'=>$remark_id,
+							'application_id'=>$application_id,
+							'fileAttachment'=>trim($upload_ca_path),
+							'user_id'=>$user_id,
+							'date_time'=>date('Y-m-d H:i:s')
+						);
+						$this->main_m->add_remarks_attachment($all_remarks_attachment_data);
+					}
+					if($_FILES['bank_cerificate']['tmp_name']!=''){
+						$all_remarks_attachment_data = array(
+							'remark_id'=>$remark_id,
+							'application_id'=>$application_id,
+							'fileAttachment'=>trim($upload_bcert_path),
+							'user_id'=>$user_id,
+							'date_time'=>date('Y-m-d H:i:s')
+						);
+						$this->main_m->add_remarks_attachment($all_remarks_attachment_data);
+					}
+					/*Surojit added end*/
+					
+						if($res==true)
+					{
+						redirect('userset/applicant_dashboard');
+					}else{
+						// echo "error";
+						$this->session->set_flashdata('msg4','Opps! some problem arrises, try again later.');
+					}
+				}
+					
+			}
+		
+		}
+		$this->data[ 'sch_id' ] = $this->session->userdata( 'member_scm_id' );
+		$this->data[ 'user_id' ] = $this->session->userdata( 'member_id' );
+		//$projsets = $this->db->select('*')->from('application_master')->where(array('user_id'=>$this->session->userdata('member_id'),'scheme_id'=>$this->session->userdata('member_scm_id')))->get()->row();
+		$this->data['application_id'] = $application_id;
+		//$data['application_id'] =$application_id = $this->User_model->get_application_remarks_id($user_id);
+		//print_r($data);die();
+		$this->load->view( 'main/citizen/sanction_letter',$this->data);
+	}
+
+	public function second_installment_view($application_id)
+	{
+		if($application_id == "" || $application_id == NULL){
+			redirect('dafault404');
+		}
+		if ($_POST) {
+			
+			$application_id = $this->input->post( 'application_id' );
+			$user_id = $this->input->post( 'user_id' );
+			$sch_id = $this->input->post( 'sch_id' );
+		
+			
+			$path = 'uploads/second_installment_upload_document/';
+			$time = time();
+		
+			if ( !empty( $_FILES[ 'UC' ] ) && $_FILES[ "UC" ][ "tmp_name" ] != '' ) {
+			  $chk_data = $this->db->query( "SELECT * FROM application_master WHERE application_id='$application_id' " );
+			  $img_bond = $time . '_' . $_FILES[ 'UC' ][ 'name' ];
+			  $upload_uc_path = $path . $img_bond;
+			  move_uploaded_file( $_FILES[ 'UC' ][ 'tmp_name' ], $upload_uc_path );
+		
+			   	if ( $chk_data->num_rows() > 0 ) {
+					$query = $this->db->query( "UPDATE application_master SET UC ='$img_bond' WHERE application_id='$application_id' " );
+			  	}
+			
+			}
+			if ( !empty( $_FILES[ 'scnd_installment_ca_certificate' ] ) && $_FILES[ "scnd_installment_ca_certificate" ][ "tmp_name" ] != '' ) {
+				$chk_data = $this->db->query( "SELECT * FROM application_master WHERE application_id='$application_id' " );
+				$img_ca = $time . '_' . $_FILES[ 'scnd_installment_ca_certificate' ][ 'name' ];
+				$upload_ca_path = $path . $img_ca;
+				move_uploaded_file( $_FILES[ 'scnd_installment_ca_certificate' ][ 'tmp_name' ], $upload_ca_path );
+			
+				if ( $chk_data->num_rows() > 0 ) {
+					$query = $this->db->query( "UPDATE application_master SET scnd_installment_ca_certificate ='$img_ca' WHERE application_id='$application_id'" );
+				}
+				
+			}
+			if ( !empty( $_FILES[ 'scnd_installment_bank_certificate' ] ) && $_FILES[ "scnd_installment_bank_certificate" ][ "tmp_name" ] != '' ) {
+				$chk_data = $this->db->query( "SELECT * FROM application_master WHERE application_id='$application_id' " );
+				$img_bank_cerificate = $time . '_' . $_FILES[ 'scnd_installment_bank_certificate' ][ 'name' ];
+				$upload_bcer_path = $path . $img_bank_cerificate;
+				move_uploaded_file( $_FILES[ 'scnd_installment_bank_certificate' ][ 'tmp_name' ], $upload_bcer_path );
+			
+				if ( $chk_data->num_rows() > 0 ) {
+					$query = $this->db->query( "UPDATE application_master SET scnd_installment_bank_certificate ='$img_bank_cerificate' WHERE application_id='$application_id' " );
+				}
+				
+			}
+			if ( !empty( $_FILES[ 'charter_engineer_certificate' ] ) && $_FILES[ "charter_engineer_certificate" ][ "tmp_name" ] != '' ) {
+			  $chk_data = $this->db->query( "SELECT * FROM application_master WHERE application_id='$application_id' " );
+			  $img_bank_cerificate = $time . '_' . $_FILES[ 'charter_engineer_certificate' ][ 'name' ];
+			  $upload_cng_path = $path . $img_bank_cerificate;
+			  move_uploaded_file( $_FILES[ 'charter_engineer_certificate' ][ 'tmp_name' ], $upload_cng_path );
+		
+			   if ( $chk_data->num_rows() > 0 ) {
+				$query = $this->db->query( "UPDATE application_master SET charter_engineer_certificate ='$img_bank_cerificate' WHERE application_id='$application_id' " );
+			  }
+			
+			}
+			$btn_submit= strtolower($this->input->post('btn_submit'));
+			if(($_FILES["UC"]["tmp_name"]!='' && $_FILES["scnd_installment_ca_certificate"]["tmp_name"]!='' && $_FILES["charter_engineer_certificate"]["tmp_name"]!="" && $_FILES["scnd_installment_bank_certificate"]["tmp_name"]!="") && $btn_submit=='submit')
+			{
+				if($btn_submit == 'submit'){
+					$apply_for_second_installment=1;
+					$first_installment_released_by_HQ=0;
+					$res=$this->main_m->update_application_master_data(['apply_for_second_installment'=>$apply_for_second_installment,'first_installment_released_by_HQ'=>$first_installment_released_by_HQ], $application_id);
+					
+					/*Surojit added start*/
+					$data_remarks = array(
+						'application_id'=>$application_id,
+						'user_id'=>$user_id,
+						'remarks'=>'Sanction letter supporting documents uploaded by Applicant',
+						'remark_stat'=>20,
+						'add_datetime'=>date('Y-m-d H:i:s')
+					);
+					$remark_id = $this->main_m->add_remarks($data_remarks);
+					
+					if($_FILES['UC']['tmp_name']!=''){
+						$all_remarks_attachment_data = array(
+							'remark_id'=>$remark_id,
+							'application_id'=>$application_id,
+							'fileAttachment'=>trim($upload_uc_path),
+							'user_id'=>$user_id,
+							'date_time'=>date('Y-m-d H:i:s')
+						);
+						$this->main_m->add_remarks_attachment($all_remarks_attachment_data);
+					}
+					if($_FILES['scnd_installment_ca_certificate']['tmp_name']!=''){
+						$all_remarks_attachment_data = array(
+							'remark_id'=>$remark_id,
+							'application_id'=>$application_id,
+							'fileAttachment'=>trim($upload_ca_path),
+							'user_id'=>$user_id,
+							'date_time'=>date('Y-m-d H:i:s')
+						);
+						$this->main_m->add_remarks_attachment($all_remarks_attachment_data);
+					}
+					if($_FILES['scnd_installment_bank_certificate']['tmp_name']!=''){
+						$all_remarks_attachment_data = array(
+							'remark_id'=>$remark_id,
+							'application_id'=>$application_id,
+							'fileAttachment'=>trim($upload_bcer_path),
+							'user_id'=>$user_id,
+							'date_time'=>date('Y-m-d H:i:s')
+						);
+						$this->main_m->add_remarks_attachment($all_remarks_attachment_data);
+					}
+					if($_FILES['charter_engineer_certificate']['tmp_name']!=''){
+						$all_remarks_attachment_data = array(
+							'remark_id'=>$remark_id,
+							'application_id'=>$application_id,
+							'fileAttachment'=>trim($upload_cng_path),
+							'user_id'=>$user_id,
+							'date_time'=>date('Y-m-d H:i:s')
+						);
+						$this->main_m->add_remarks_attachment($all_remarks_attachment_data);
+					}
+					/*Surojit added end*/
+					
+						if($res==true)
+					{
+						redirect('userset/applicant_dashboard');
+					}else{
+						// echo "error";
+						$this->session->set_flashdata('msg4','Opps! some problem arrises, try again later.');
+					}
+				}	
+			}
+		
+		
+		}
+		$this->data[ 'sch_id' ] = $this->session->userdata( 'member_scm_id' );
+		$this->data[ 'user_id' ] = $this->session->userdata( 'member_id' );
+		$this->data['application_id'] =$application_id;
+		//print_r($data);die();
+		$this->load->view( 'main/citizen/first_installment_view',$this->data);
+	}
+
+
+}

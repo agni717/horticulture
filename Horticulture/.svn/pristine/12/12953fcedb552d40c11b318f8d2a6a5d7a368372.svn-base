@@ -1,0 +1,127 @@
+<?php
+
+class Scheme_M extends MY_Model {
+
+    function __construct() {
+        parent::__construct();
+    }
+	
+	public function scheme_submit($data)
+    {
+    $query=$this->db->insert('schemes_master',$data);
+    if($query==true)
+    {
+        return true;
+    }else{
+            return false;
+        }
+    }
+	
+	public function get_schemes()
+    { 
+        $this->db->select('*');
+        $this->db->from('schemes_master');
+        
+        $query = $this->db->get();
+        if($query->num_rows()>0)
+        {
+          return $query->result();
+        }else{
+          return false;
+        }
+    }
+	
+	public function scheme_update($id,$data)
+    { 
+        $this->db->where('id',$id);
+        $query=$this->db->update('schemes_master',$data);
+     
+        if($query==true)
+        {
+            return true;
+        }else{
+            return false;
+        }
+    }
+    public function get_schemes_id($id)
+    { 
+        $this->db->select('*');
+        $this->db->from('schemes_master');
+        $this->db->where('id',$id);
+        
+        $query = $this->db->get();
+        if($query->num_rows()>0)
+        {
+          return $query->result();
+        }else{
+          return false;
+        }
+    }
+	
+	public function total_applicant($scheme_id)
+    {
+       /*$query=$this->db->query(" SELECT * FROM  application_master WHERE scheme_id='$scheme_id' AND is_applicant_submitted='2' AND is_district_app_reject_revert='1'"); */ 
+	   $district = $this->session->userdata['district'];
+		$query=$this->db->query(" SELECT * FROM  application_master WHERE scheme_id='$scheme_id' AND proj_district='$district' AND is_applicant_submitted='2'");
+        return $query->num_rows();
+    }
+	
+	public function approved_by_district($scheme_id)
+    {
+       /*$query=$this->db->query(" SELECT * FROM  application_master WHERE scheme_id='$scheme_id' AND is_district_app_reject_revert='1' AND is_applicant_submitted='2'");*/ 
+	   $district = $this->session->userdata['district'];
+		$query=$this->db->query(" SELECT * FROM  application_master WHERE scheme_id='$scheme_id' AND proj_district='$district' AND is_district_app_reject_revert='1'");
+        return $query->num_rows();
+    }
+    public function reject_by_district($scheme_id)
+    {
+       /*$query=$this->db->query(" SELECT * FROM  application_master WHERE scheme_id='$scheme_id' AND is_district_app_reject_revert='2' AND is_applicant_submitted='2'");*/ 
+	   $district = $this->session->userdata['district'];
+		$query=$this->db->query(" SELECT * FROM  application_master WHERE scheme_id='$scheme_id' AND proj_district='$district' AND is_district_app_reject_revert='2'");
+        return $query->num_rows();
+    }
+    public function project_cost_update_by_district($scheme_id)
+    {
+		$district = $this->session->userdata['district'];
+       $query=$this->db->query(" SELECT * FROM  application_master WHERE scheme_id='$scheme_id' AND proj_district='$district' AND is_project_cost_updated_dist='1'  AND is_first_sanction='1'");   
+        return $query->num_rows();
+    }
+	
+	
+	public function update_application_master($application_id,$data)
+    {
+        $this->db->where('application_id',$application_id);
+        $query = $this->db->update('application_master',$data);
+
+        if($query==true)
+        {
+            return true;
+        }else{
+            return false;
+        }
+    }
+	
+	public function add_remarks($data)
+    {
+        $query = $this->db->insert('all_remarks',$data);
+
+        if($query==true)
+        {
+            return $this->db->insert_id();
+        }else{
+            return false;
+        }
+    }
+
+    public function add_remarks_attachment($data)
+    {
+        $query = $this->db->insert('all_remarks_attachment',$data);
+
+        if($query==true)
+        {
+            return true;
+        }else{
+            return false;
+        }
+    }
+}

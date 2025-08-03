@@ -1,0 +1,308 @@
+<?php
+
+if (!defined('BASEPATH'))
+    exit('No direct script access allowed');
+
+class Headquater extends HQ_Controller {
+	
+	 public function __construct() {
+        parent::__construct();
+
+        //$this->data["u_details"] = $this->admin_m->GetDetailsofUsers($this->session->userdata['uid']);
+        
+    }
+	
+	public function scheme()
+	{
+		$this->form_validation->set_error_delimiters('<div class="error">', '</div>');
+        $this->form_validation->set_rules('name', 'Name', 'required|trim');
+        $this->form_validation->set_rules('created', 'Start Date', 'required|trim');
+        $this->form_validation->set_rules('modified', 'End Date.', 'required|trim');
+        $this->form_validation->set_rules('details', 'Details', 'required|trim');
+	            
+
+	    if($this->form_validation->run() == TRUE)
+	    {
+
+	    $data = array(
+		"scheme_name" => $this->input->post("name"),
+		"created" => $this->input->post("created"),
+		"modified" => $this->input->post("modified"),
+		"details" => $this->input->post("details")
+		);
+		$res=$this->scheme_m->scheme_submit($data);
+		if($res==true)
+		{
+			$msg= "data added successfully";
+		}else{
+			$msg= "something problem happen";
+		}
+		$this->session->set_flashdata('msg',$msg );
+		}else{
+	                
+	        validation_errors();
+	    }      
+	 	$this->load->view('headquater/add_scheme',$this->data);
+	}
+	
+	
+	public function scheme_list()
+	{
+		$this->data['scheme_data'] = $this->scheme_m->get_schemes();
+		$this->load->view('headquater/scheme_list',$this->data);
+	}
+
+
+	public function edit_scheme()
+	{
+		$id = $this->uri->segment(4);
+		
+		if($_POST)
+		{
+			//print_r($_POST); die;
+			$this->form_validation->set_error_delimiters('<div class="error">', '</div>');
+	        $this->form_validation->set_rules('name', 'Name', 'required|trim');
+	        $this->form_validation->set_rules('created', 'Start Date', 'required|trim');
+	        $this->form_validation->set_rules('modified', 'End Date.', 'required|trim');
+	        $this->form_validation->set_rules('details', 'Details', 'required|trim');
+
+
+	        if($this->form_validation->run() == TRUE)
+		    {
+		    	//echo 123; die;
+
+			    $data = array(
+					"scheme_name" => $this->input->post("name"),
+					"created" => $this->input->post("created"),
+					"modified" => $this->input->post("modified"),
+					"details" => $this->input->post("details")
+				);
+				$res=$this->scheme_m->scheme_update($id,$data);
+				
+				if($res==true)
+				{
+					$msg= "Data updated successfully";
+				}else{
+					$msg= "Opps! something problem happen";
+				}
+				$this->session->set_flashdata('msg',$msg );
+			}
+			/*else
+			{
+			                
+			    validation_errors();
+			}*/
+		} 
+		
+		    
+		    $this->data['scheme_data'] = $this->scheme_m->get_schemes_id($id);    
+		 	$this->load->view('headquater/edit_scheme',$this->data);
+	}
+	
+	
+	
+	
+	
+	
+	public function ajax_app_rej_rev()
+	{
+		 // print_r($_POST);
+		 // print_r($_FILES); die();
+	  	$user_id = $this->data['admin_uid']; 
+		$h_action = $this->input->post('hq_action');
+		$application_id = $this->input->post('application_id');
+		$remarks = $this->input->post('remarks');
+
+		$datetime = date('Y-m-d H:i:s');
+		if($h_action=='')
+		{
+			$msg = "3##Please select one radio button to do an action";
+		}else{
+
+		$path = 'uploads/process_attachment/';
+
+		if($_FILES['fileApp']['tmp_name']!=''){
+			
+		$fileApp_name = $_FILES['fileApp']['name'];
+		$fileApp_tmp_name = $_FILES['fileApp']['tmp_name'];
+
+		$time = time();
+		$upload_file = $path.$time.'_'.$fileApp_name;
+
+		move_uploaded_file($fileApp_tmp_name, $upload_file);
+		}
+
+		if($h_action ==3){
+			$data = array(
+				'is_applicant_submitted'=>'1',
+				'is_hq_app_reject_revert'=>$h_action,
+				'hq_remarks'=>$remarks
+			);
+		}else{
+			$data = array(
+				'is_district_app_reject_revert'=>'0',
+				'is_hq_app_reject_revert'=>$h_action,
+				'hq_remarks'=>$remarks
+			);
+		}
+		$res1 = $this->scheme_m->update_application_master($application_id,$data);
+
+		$data_remarks = array(
+		'application_id'=>$application_id,
+		'user_id'=>$user_id,
+		'remarks'=>$remarks,
+		'add_datetime'=>$datetime
+		);
+
+		$remark_id = $this->scheme_m->add_remarks($data_remarks);
+
+		$all_remarks_attachment_data = array(
+		'remark_id'=>$remark_id,
+		'application_id'=>$application_id,
+		'fileAttachment'=>$fileApp_name,
+		'user_id'=>$user_id,
+		'date_time'=>$datetime
+		);
+		if($_FILES['fileApp']['tmp_name']!=''){
+			$res2 = $this->scheme_m->add_remarks_attachment($all_remarks_attachment_data);
+		}
+		if($res1==true)
+		{
+			if($h_action==1)
+			{
+				$msg = "1##Application approved successfully";
+			}
+			elseif($h_action==2)
+			{
+				$msg = "2##Application rejected successfully";
+			}
+			elseif($h_action==3)
+			{
+				$msg = "3##Application reverted successfully";
+			}
+		}
+		else{
+			$msg = "4##Opps! some problem arrises, try again later";
+		}
+	}
+	echo $msg;
+	}
+	public function user_list()
+	{
+		$this->data['user_list'] = $this->admin_m->get_district_admin_list();
+		$this->load->view('headquater/user_list',$this->data);
+	}
+	public function user_creation()
+	{
+		$id = $this->uri->segment('4');
+		if($_POST)
+		{
+			//print_r($_POST); die;
+			if(!empty($id)){
+				$this->form_validation->set_rules('user_name', 'Login ID', 'required|trim');
+			}else{
+				$this->form_validation->set_rules('user_name', 'Login ID', 'required|is_unique[user_master.user_name]|trim');
+			}
+			$this->form_validation->set_error_delimiters('<div class="error">', '</div>');
+	        $this->form_validation->set_rules('name', 'Name', 'required|trim');
+	        $this->form_validation->set_rules('phone', 'Phone', 'required|is_natural|trim');
+	        $this->form_validation->set_rules('email', 'Email', 'required|valid_email|trim');
+	        $this->form_validation->set_rules('district', 'District', 'required|trim');
+			
+			$this->form_validation->set_rules('password', 'Password', 'required|trim');
+			$this->form_validation->set_rules('confirm_password', 'Confirm Password', 'required|matches[password]|trim');
+
+
+	        if($this->form_validation->run() == TRUE)
+		    {
+		    	//echo 123; die;
+
+			    $data = array(
+					"name" => $this->input->post("name"),
+					"phone"=>$this->input->post("phone"),
+					"email"=>$this->input->post("email"),
+
+					"district"=>$this->input->post("district"),
+					"user_name"=>$this->input->post("user_name"),
+					"password"=>$this->input->post("password"),
+					"u_type"=>2,
+					"status"=>1
+				);
+				$res=$this->admin_m->submit_disctrict_user_form($data,$id);
+				if($res==true){
+                    //$msg = '1##Distric Admin Added Successfully ';
+					$this->session->set_flashdata('msg', 'Distric Admin Added Successfully');
+				}else{
+					//$msg = '2##Something Error Happened ';
+					$this->session->set_flashdata('msg', 'Something Error Happened');
+				}
+			}
+		}
+		
+		if(!empty($id)){
+			$this->data['user']=$this->admin_m->get_edit_user($id);	
+		}
+		$this->data['district_data'] = $this->admin_m->get_district_data();
+		
+		/*echo('<pre>');
+		print_r($this->data);
+		die();*/
+		
+		$this->load->view('headquater/superuser_create_user',$this->data);
+	}
+	
+	
+	
+	public function ajax_update_Applicant_status()
+  {
+    $id = $this->input->post('id');
+    $status = $this->input->post('status');
+    
+    $res = $this->admin_m->update_applicant_status(array('status'=>$status),$id);
+    if($res == true){
+      $msg = "User status updated";
+    }else{
+      $msg = "Opps! some problem arises, please try agin later";
+    }
+    echo $msg;
+  }
+  
+function user_update()
+{
+	$msg='';
+	//print_r($_POST);die;
+	//echo "123";die;
+	$pass= $this->input->post('password');
+
+	if($pass!='')
+	{
+    	$data= array(
+		"name"=>$this->input->post("name"),
+		"phone"=>$this->input->post("phone"),
+		"email"=>$this->input->post("email"),
+		"district"=>$this->input->post("district"),
+		"user_name"=>$this->input->post("user_name"),
+		"password"=>$this->input->post("password")
+		);
+	}else{
+		$data= array(
+		"name"=>$this->input->post("name"),
+		"phone"=>$this->input->post("phone"),
+		"email"=>$this->input->post("email"),
+		"district"=>$this->input->post("district"),
+		"user_name"=>$this->input->post("user_name")
+		);
+	}
+	$id=$this->input->post('id');
+	$res = $this->admin_m->user_update($data,$id);
+	
+	//echo $this->db->last_query();die;
+	if($res == true){
+      $msg = "1##User status updated";
+    }else{
+      $msg = "2##Opps! some problem arises, please try agin later";
+    }
+    echo $msg;
+}
+
+}

@@ -1,0 +1,15 @@
+<?php $this->load->view('common/header_hq'); ?>
+<div class="page-body-wrapper">
+
+   <div class="container-fluid">
+      <div class="row">
+         <div class="col-lg-12 mx-auto mt-2">
+            <h4 class="card-title">Dashboard</h4>
+            
+         </div>
+      </div>
+	   
+   </div>
+</div>
+<?php $this->load->view('common/footer'); ?>
+ 

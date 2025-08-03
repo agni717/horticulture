@@ -1,0 +1,1419 @@
+<?php $this->load->view('common/header_citizen'); ?>   
+<style>
+   .proj_working_capital{color:red;}
+    .text-error{color: #f05555;}
+    .table thead th, .table tbody td { white-space:normal !important; font-size:11px !important; padding: 5px !important; }
+   .table td { line-height:12px; }
+   .table td a i { font-size:16px !important; }
+</style>
+
+<div class="page-body-wrapper">
+   <div class="container-fluid">
+      <div class="row">
+         <div class="col-lg-12 grid-margin mt-5 mx-auto">
+            <h4 class="card-title">Machinery Specification & Project Cost</h4>
+         </div>
+      </div>
+      <div class="row">
+         <div class="col-lg-12 text-center text-success msg_cont2" >
+            <?php
+            if(!empty($this->session->flashdata('successmsg')))
+            {
+            echo $this->session->flashdata('successmsg');
+               // echo '<script>
+               // setTimeout(function().delay(8000).fadeOut();</script>';
+               echo '<script>
+            setTimeout(function(){window.location.href="'.base_url().'User_details/documents_list";}, 4000);</script>';
+            //redirect("applicant/documents_list");
+            }
+            ?>
+            <?php
+            if(!empty($this->session->flashdata('successmsg')))
+            {
+            echo $this->session->flashdata('errormsg');
+               // echo '<script>
+               // setTimeout(function().delay(8000).fadeOut();</script>';
+            //redirect("applicant/project");
+            }
+            ?>
+         </div>
+      </div>
+      <?php echo form_open_multipart('User_details/project_cost',array('id'=>"addFrm",'name'=>"addFrm",'onsubmit'=>"return submitProjectCost();")); ?>
+         <?php //echo validation_errors();?>
+
+      <div class="row">
+         <input type="hidden" name="application_id" value="<?php echo $application_id;?>" />
+         <!--<input type="hidden" name="sch_id" value="<?php //echo $sch_id;?>" />-->
+         <!--<input type="hidden" name="user_id" value="<?php //echo $user_id;?>" />-->
+         <div class="col-lg-12 grid-margin mx-auto">
+            <div class="card">
+               <div class="card-body">
+                  <div class="row cost-field">
+                     <fieldset>
+                        <legend>Plant & Machinery Specification</legend>
+                        <div class="col-lg-12">
+
+                           <div class="form-group form-row text-left mb-0">
+                              <div class="col-lg-11">
+                                 <div class="row desk_label">
+                                    <label class="col-lg-2 col-form-label px-1">Machine Name:</label>
+                                    <label class="col-lg-2 col-form-label px-1">Manufacturer Name:</label>
+                                    <label class="col-lg-1 col-form-label px-1">Serial No:</label>
+                                    <label class="col-lg-2 col-form-label px-1">Model No:</label>
+                                    <label class="col-lg-2 col-form-label px-1">Machine Type:</label>
+                                    <label class="col-lg-1 col-form-label px-1">Cost(Lakhs):</label>
+                                    <label class="col-lg-1 col-form-label px-1">Capacity:</label>
+                                    <label class="col-lg-1 col-form-label px-1">Unit:</label>
+                                 </div>
+                              </div>
+                           </div>
+      
+                        
+                           <div class="form-group form-row text-left">
+                              <div class="col-lg-11">
+                                 <div class="row">
+                                    <label class="col-lg-2 col-form-label mob_label px-1">Machine Name:</label>
+                                    <div class="col-lg-2 px-1"> 
+                                       <input type="text" class="form-control" name="machine_name" id="machine_name" value="" placeholder="Machine Name"/>
+                                       <small class="text-error machine_name"><?php echo form_error('machine_name');?></small>
+                                    </div>
+                                    
+                                    <label class="col-lg-2 col-form-label mob_label px-1">Manufacturer Name:</label>
+                                    <div class="col-lg-2 px-1">
+                                       <input type="text" class="form-control" name="manufacturer_name" id="manufacturer_name" value="" placeholder="Manufacturer Name"/>
+                                       <small class="text-error manufacturer_name"><?php echo form_error('manufacturer_name');?></small>
+                                    </div>
+
+                                    <label class="col-lg-1 col-form-label mob_label px-1">Serial No:</label>
+                                    <div class="col-lg-1 px-1">
+                                       <input type="text" class="form-control" name="serial_no" id="serial_no" value="" placeholder="Serial No"/>
+                                       <small class="text-error serial_no"><?php echo form_error('serial_no');?></small>
+                                    </div>
+
+                                    <label class="col-lg-2 col-form-label mob_label px-1">Model No:</label>
+                                    <div class="col-lg-2 px-1">
+                                       <input type="text" class="form-control" name="model_no" id="model_no" value="" placeholder="Model No"/>
+                                       <small class="text-error model_no"><?php echo form_error('model_no');?></small>
+                                    </div>
+
+                                    <label class="col-lg-2 col-form-label mob_label px-1">Machine Type:</label>
+                                    <div class="col-lg-2 px-1">
+                                       <?php
+                                       $machine_type = '';
+                                       if(set_value('machine_type') !=''){
+                                          $machine_type = set_value('machine_type');
+                                       }
+                                       ?> 
+                                       <select class="form-control" name="machine_type" id="machine_type">
+                                          <option value="">---Select---</option>
+                                          <option value="Imported">Imported</option>
+                                          <option value="Indigenous">Indigenous</option>
+                                          <option value="Assembled / Fabricated">Assembled / Fabricated</option>
+                                       </select>
+                                       <small class="text-error machine_type"><?php echo form_error('machine_type');?></small>
+                                    </div>
+
+                                    <label class="col-lg-1 col-form-label mob_label px-1">Cost(Lakh):</label>
+                                    <div class="col-lg-1 cost_field px-1">
+                                    <?php
+                                       $cost ='';
+                                       if(set_value('cost') !=''){
+                                          $cost = set_value('cost');
+                                       }
+                                    ?> 
+                                    <input type="text" class="form-control" name="cost" id="cost" placeholder="In Lakh" value="" />
+                                    <small class="text-error cost"><?php echo form_error('cost');?></small>
+                                    </div> 
+
+                                    <label class="col-lg-1 col-form-label mob_label px-1">Capacity:</label>
+                                    <div class="col-lg-1 px-1">
+                                       <?php
+                                       $capacity ='';
+                                       if(set_value('capacity') !=''){
+                                          $capacity = set_value('capacity');
+                                       }
+                                       ?> 
+                                       <input type="text" class="form-control" name="capacity" id="capacity" value="" placeholder="Capacity"/>
+                                       <small class="text-error capacity"><?php echo form_error('capacity');?></small>
+                                    </div>
+
+                                    <label class="col-lg-1 col-form-label mob_label px-1">Unit:</label>
+                                    <div class="col-lg-1 px-1">
+                                       <select class="form-control"name="proj_measuring_unit" id="proj_measuring_unit">
+                                          <option value="">---Select---</option>
+                                          <?php foreach ($project_unit as $row) { ?> 
+                                             <option value="<?php echo $row->id  ;?>"><?php echo $row->project_cost_unit ;?></option>
+                                          <?php } ?> 
+                                       </select>
+                                       <small class="text-error proj_measuring_unit"><?php echo form_error('proj_measuring_unit');?></small>
+                                    </div>
+                                 </div>
+                              </div>
+                              <div class="col-lg-1">
+                                 <button type="button" class="btn btn-primary add_machine_id" id="add_machine_id" role="button" onclick="add_machine();"><i class="fa fa-plus-circle" aria-hidden="true"></i>  ADD</button>
+                              </div>
+                           </div>
+
+                           <div class="col-lg-12 text-center mt-4" align="center">
+                              <div class="get_error_total" align="center" style="background-color: #bf0000;color: #fff;max-width: 500px;margin: 0 auto;padding: 10px 20px;display: none;"></div>
+                              <div class="get_success_total" align="center" style="background-color: #174b10;color: #fff;max-width: 500px;margin: 0 auto;padding: 10px 20px;display: none;"></div>
+                              <div class="div_roller_total" align="center" style="display: none;"><img src="<?php echo base_url(); ?>assets/images/ajax_loader.gif" style="max-width: 60px;" /></div>
+                           </div>
+                        </div>
+
+                        <div class="col-lg-12 mt-4">
+                           <div class="block-table">
+                              <table class="table table-striped table-bordered break-table" style="width:100%">
+                                 <thead>
+                                    <tr>
+                                       <th>Machine Name</th>
+                                       <th>Manufacturer Name</th>
+                                       <th>Serial No</th>
+                                       <th>Model No</th>
+                                       <th>Machine Type</th>
+                                       <th>Cost(Lakhs)</th>
+                                       <th>Capacity</th>
+                                       <th>Unit</th>
+                                       <th>Actions</th>
+                                    </tr>
+                                 </thead>
+                                 <tbody id="tbody_id">
+                                    <?php echo $table_row; ?>
+                                 </tbody>
+                              </table>
+                           </div>
+                        </div>
+                     </fieldset>
+                  </div> 
+               </div>
+            </div>
+         </div>
+      </div> 
+
+      <div class="row">
+         <div class="col-lg-12 grid-margin mx-auto">
+            <div class="card">
+               <div class="card-body">
+                  <div class="form-sample cost_field">
+                     <fieldset>
+                        <legend>Project Cost</legend>                              
+                        <div class="form-group form-row">                                 
+                           <div class="col-lg-3">
+                              <label class="col-form-label">Land & Buiding Cost:</label>
+                              <input type="text" class="form-control" id="proj_land_building_cost" name="proj_land_building_cost" onkeyup="get_final_project_cost();" placeholder="In Lakh" value="<?=$project_data->proj_land_building_cost;?>"  />
+                              <small class="text-error proj_land_building_cost"><?php echo form_error('proj_land_building_cost');?></small>
+                           </div>                                 
+                           <div class="col-lg-3">
+                              <label class="col-form-label">Plant and Machineries Cost:</label>
+                              <input type="text" class="form-control" id="proj_plant_machinary_cost" placeholder="In Lakh" readonly name="proj_plant_machinary_cost" value="<?php if(!empty($project_data->proj_plant_machinary_cost)){echo $project_data->proj_plant_machinary_cost;}else{echo $table_totalcost;}?>" />
+                              <small class="text-error proj_plant_machinary_cost"><?php echo form_error('proj_plant_machinary_cost');?></small>
+                           </div>
+                           <div class="col-lg-3">
+                              <label class="col-form-label">Misc. Fixed Assets<sup>*</sup>:</label>
+                              <input type="text" class="form-control" id="proj_misc_fixed_assets" placeholder="In Lakh" name="proj_misc_fixed_assets" value="<?=$project_data->proj_misc_fixed_assets;?>"  onkeyup="get_final_project_cost();"/>
+                              <small class="text-error proj_misc_fixed_assets"><?php echo form_error('proj_misc_fixed_assets');?></small>
+                           </div>
+                           <div class="col-lg-3">
+                              <label class="col-form-label">Preli. & Pre-Operative Expenses<sup>*</sup>:</label>
+                              <input type="text" class="form-control" placeholder="In Lakh" id="proj_preli_preopearative_expenses" name="proj_preli_preopearative_expenses" value="<?=$project_data->proj_preli_preopearative_expenses;?>" onkeyup="get_final_project_cost();" />
+                              <small class="text-error proj_preli_preopearative_expenses"><?php echo form_error('proj_preli_preopearative_expenses');?></small>
+                           </div>
+                        </div>
+                        <div class="form-group form-row">                                 
+                           <div class="col-lg-3">
+                              <label class="col-form-label">Contingencies etc.<sup>*</sup>:</label>
+                              <input type="text" class="form-control" placeholder="In Lakh" id="proj_contingencies_etc" name="proj_contingencies_etc" value="<?=$project_data->proj_contingencies_etc;?>" onkeyup="get_final_project_cost();"/>
+                              <small class="text-error proj_contingencies_etc"><?php echo form_error('proj_contingencies_etc');?></small>
+                           </div>                                 
+                           <div class="col-lg-3">
+                              <label class="col-form-label">Working Capital Margin<sup>*</sup>:</label>
+                              <input type="text" class="form-control" placeholder="In Lakh" id="proj_working_capital_margin" name="proj_working_capital_margin" value="<?=$project_data->proj_working_capital_margin;?>" onkeyup="get_final_project_cost();"/>
+                              <small class="text-error proj_working_capital_margin"><?php echo form_error('proj_working_capital_margin');?></small>
+                           </div>
+                           <div class="col-lg-3">
+                              <label class="col-form-label">Others:</label>
+                              <input type="text" class="form-control" placeholder="In Lakh" id="proj_others" name="proj_others" value="<?=$project_data->proj_others;?>" onkeyup="get_final_project_cost();"/>
+                              <small class="text-error proj_others"><?php echo form_error('proj_others');?></small>
+                           </div>
+                           <div class="col-lg-3">
+                              <label class="col-form-label">Total Project Cost<sup>*</sup>:</label>
+                              <input type="text" class="form-control" placeholder="In Lakh" id="proj_total_project_cost" name="proj_total_project_cost" value="<?=$project_data->proj_total_project_cost;?>" readonly />
+                              <small class="text-error proj_total_project_cost"><?php echo form_error('proj_total_project_cost');?></small>
+                           </div>
+                        </div>
+                        <!-- <div class="form-group form-row">                                
+                           <label class="col-lg-3 col-form-label">Subsidy claimed under WBFCIS - 2021:</label>
+                           <div class="col-lg-3">
+                              <input type="text" class="form-control" value="0" readonly />
+                           </div>
+                        </div> -->
+                     </fieldset>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
+
+      <div class="row">
+         <div class="col-lg-12 grid-margin mx-auto">
+            <div class="card">
+               <div class="card-body">
+                  <div class="form-sample cost_field">
+                     <fieldset>
+                        <legend>Means of Finance</legend>
+                        <div class="form-group form-row">                                 
+                           <div class="col-lg-3">
+                              <label class="col-form-label">Promoters' Contribution<sup>*</sup>:</label>
+                              <input type="text" class="form-control" placeholder="In Lakh" id="proj_promoter_contribution" name="proj_promoter_contribution" value="<?=$project_data->proj_promoter_contribution;?>" onkeyup="get_total_finance_cost();" />
+                              <small class="text-error proj_promoter_contribution"><?php echo form_error('proj_promoter_contribution');?></small>
+                           </div>
+                           <div class="col-lg-3">
+                              <label class="col-form-label">Term loan from bank / F.I.<sup>*</sup>:</label>
+                              <input type="text" class="form-control" placeholder="In Lakh" id="proj_term_loan_from_bank" name="proj_term_loan_from_bank" value="<?php if(!empty($project_data->proj_term_loan_from_bank)){echo $project_data->proj_term_loan_from_bank;}else{echo $project_data->proj_tl_cost;}?>" readonly />
+                              <small class="text-error proj_term_loan_from_bank"><?php echo form_error('proj_term_loan_from_bank');?></small>
+                           </div>
+                           <div class="col-lg-3">
+                              <label class="col-form-label">Others<sup>*</sup>:</label>
+                              <input type="text" class="form-control" placeholder="In Lakh" id="proj_finance_others" name="proj_finance_others" value="<?=$project_data->proj_finance_others;?>" onkeyup="get_total_finance_cost();"/>
+                              <small class="text-error proj_finance_others"><?php echo form_error('proj_finance_others');?></small>
+                           </div>
+                           <div class="col-lg-3">
+                              <label class="col-form-label">Total Means of Finance<sup>*</sup>:</label>
+                              <input type="text" class="form-control" placeholder="In Lakh" id="proj_total_means_of_finance" name="proj_total_means_of_finance" value="<?=$project_data->proj_total_means_of_finance;?>" readonly />
+                              <small class="text-error proj_total_means_of_finance"><?php echo form_error('proj_total_means_of_finance');?></small>
+                           </div>
+                        </div>
+                     </fieldset>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
+
+      <div class="row">
+         <div class="col-lg-12 grid-margin mx-auto">
+            <div class="card">
+               <div class="card-body">
+                  <div class="form-sample cost_field">
+                     <fieldset>
+                        <div class="form-group form-row">
+                           <div class="col-lg-3">
+                              <label class="col-form-label">Working Capital<sup>*</sup>:</label>
+                              <input type="text" class="form-control" name="proj_working_capital" value="<?=$project_data->proj_working_capital;?>" id="proj_working_capital" />
+                              <small class="text-error proj_working_capital"><?php echo form_error('proj_working_capital');?></small>
+                           </div>                                 
+                           <div class="col-lg-3">
+                              <label class="col-form-label">Subsidy claimed under WBFCIS - 2021<sup>*</sup>:</label>
+                              <input type="text" class="form-control" id="proj_subsity_claimed" name="proj_subsity_claimed" value="<?=$project_data->proj_subsity_claimed;?>" readonly />
+                              <small class="text-error proj_subsity_claimed"><?php echo form_error('proj_subsity_claimed');?></small>
+                           </div>
+                        </div>
+                     </fieldset>
+                     <div class="row mt-3">
+                        <div class="col-lg-6">
+                           <fieldset>
+                              <legend>Proposed no of Employment Generated (Indirect)</legend>
+                              <div class="form-group form-row justify-content-center">                                 
+                                 <div class="col-lg-6">
+                                    <label class="col-form-label">Male<sup>*</sup>:</label>
+                                    <input type="text" class="form-control" id="proj_indirect_male" name="proj_indirect_male" value="<?=$project_data->proj_indirect_male;?>" />
+                                    <small class="text-error proj_indirect_male"><?php echo form_error('proj_indirect_male');?></small>
+                                 </div>                                 
+                                 <div class="col-lg-6">
+                                    <label class="col-form-label">Female<sup>*</sup>:</label>
+                                    <input type="text" class="form-control" id="proj_indirect_female" name="proj_indirect_female" value="<?=$project_data->proj_indirect_female;?>" />
+                                    <small class="text-error proj_indirect_female"><?php echo form_error('proj_indirect_female');?></small>
+                                 </div>
+                              </div>
+                           </fieldset>
+                        </div>
+                        <div class="col-lg-6">
+                           <fieldset>
+                              <legend>Proposed no of Employment Generated (Direct)</legend>
+                              <div class="form-group form-row justify-content-center">                                 
+                                 <div class="col-lg-6">
+                                    <label class="col-form-label">Male<sup>*</sup>:</label>
+                                    <input type="text" class="form-control" id="proj_direct_male" name="proj_direct_male" value="<?=$project_data->proj_direct_male;?>"/>
+                                    <small class="text-error proj_direct_male"><?php echo form_error('proj_direct_male');?></small>
+                                 </div>                                 
+                                 <div class="col-lg-6">
+                                    <label class="col-form-label">Female:</label>
+                                    <input type="text" class="form-control" id="proj_direct_female" name="proj_direct_female" value="<?=$project_data->proj_direct_female;?>" />
+                                    <small class="text-error proj_direct_female"><?php echo form_error('proj_direct_female');?></small>
+                                 </div>
+                              </div>                              
+                           </fieldset> 
+                        </div>
+                     </div>
+                     <div class="row">
+                        <div class="col-lg-12 text-center mt-2">
+                           
+                           <div class="get_error_total2" align="center" style="background-color: #bf0000;color: #fff;max-width: 500px;margin: 0 auto;padding: 10px 20px;display: none;">sdgdg</div>
+                           <div class="get_success_total2" align="left" style="background-color: #174b10;color: #fff;max-width: 500px;margin: 0 auto;padding: 10px 20px;display: none;">ssddg</div>
+                           <div class="div_roller_total2" align="center" style="display: none;"><img src="<?php echo base_url('assets/images/ajax_loader.gif'); ?>" style="max-width: 60px;" /></div>
+                                 
+                        </div>
+                     </div>
+                     <div class="row">
+                        <div class="col-lg-12 text-right mt-2">
+                        <button class="btn btn-primary mb-2" type="button" name="submit2" id="prev_btn" onclick="goto_prev_chk();">Previous</button>
+                        <button class="btn btn-primary mb-2" type="button" name="submit" id="next_btn" onclick="submitProjectCost();">Next</button>
+                        </div>
+                     </div>
+                  </div>                       
+               </div>
+            </div>
+         </div>
+      </div>
+      </form>
+   </div>
+</div>
+
+<?php $this->load->view('common/footer'); ?>
+      
+<script type="text/javascript">
+
+function delete_plant_machinary(mc_id){
+   var form_data = new FormData();
+   form_data.append('mc_id', mc_id);
+   $.ajax({
+      method: 'POST',
+      url: '<?php echo base_url() . "userset/delete_plant_machinary"; ?>', //mc_cost
+      data: form_data,
+      dataType: 'JSON',
+      contentType: false,
+      processData: false,
+      success: function(data) {
+         if (data.msg == 1) {
+            var mc_id = data.mc_id;
+            var t_cost = $('#proj_plant_machinary_cost').val();
+            if(t_cost == ""){
+               t_cost = 0.00;
+            }
+            t_cost = parseFloat(t_cost) - parseFloat(data.mc_cost);
+            $('#proj_plant_machinary_cost').val(t_cost.toFixed(2));
+            get_final_project_cost();
+            $('#plant_machinery_tr_'+mc_id).remove();
+         }
+      }
+   });
+}
+
+function add_machine()
+{
+   $('#add_machine_id').prop('disabled', true);
+   $('.div_roller_total').fadeIn();
+   var e_error = 0;
+   const delay = 5000;
+   var error_message = 'There have some errors please check above, Try again.';
+   const alphaletters_spaces = /^[A-Za-z ]+$/;
+   const alphaletters = /^[A-Za-z]+$/;
+   const alphanumerics = /^[A-Za-z0-9]+$/;
+   const alphanumerics_spaces = /^[A-Za-z0-9_,\- ]+$/;
+   const alphanumerics_no = /^[A-Za-z0-9_/&(@):.,%\- \n\r]+$/;
+   const onlynumerics = /^[0-9]+$/;
+   const onlynumerics_withdot = /^[0-9.]+$/;
+   const specials_char = /[~`!#$%\^&*+=\[\]\\';./{}()|\\":<>\?]/g;
+   const emailpattern = /^\b[A-Z0-9._%-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b$/i;
+   const allowedPic_Extensions = /(\.jpg|\.jpeg|\.png|\.JPG|\.JPEG|\.PNG)$/i;
+   const allowedExtensions = /(\.pdf|\.PDF|\.jpg|\.jpeg|\.png|\.JPG|\.JPEG|\.PNG)$/i;
+
+   var machine_name = $('#machine_name').val().trim();
+   var manufacturer_name = $('#manufacturer_name').val().trim();
+   var serial_no = $('#serial_no').val().trim();
+   var model_no = $('#model_no').val().trim();
+   var machine_type = $('#machine_type option:selected').val().trim();
+   var cost = $('#cost').val().trim();
+   var capacity = $('#capacity').val().trim();
+   var proj_measuring_unit = $('#proj_measuring_unit option:selected').val().trim();
+
+   if (machine_name == "") {
+      e_error = 1;
+      $('.machine_name').html('Machine Name is Required.');
+   } else {
+      if (!machine_name.match(alphanumerics_no)) {
+         e_error = 1;
+         $('.machine_name').html('Illegal character(s) used, Check again.');
+      } else {
+         $('.machine_name').html('');
+      }
+   }
+
+   if (manufacturer_name == "") {
+      e_error = 1;
+      $('.manufacturer_name').html('Manufacturer Name is Required.');
+   } else {
+      if (!manufacturer_name.match(alphanumerics_no)) {
+         e_error = 1;
+         $('.manufacturer_name').html('Illegal character(s) used, Check again.');
+      } else {
+         $('.manufacturer_name').html('');
+      }
+   }
+
+   if (serial_no == "") {
+      e_error = 1;
+      $('.serial_no').html('Serial No is Required.');
+   } else {
+      if (!serial_no.match(alphanumerics_no)) {
+         e_error = 1;
+         $('.serial_no').html('Illegal character(s) used, Check again.');
+      } else {
+         $('.serial_no').html('');
+      }
+   }
+
+   if (model_no == "") {
+      e_error = 1;
+      $('.model_no').html('Model Number is Required.');
+   } else {
+      if (!model_no.match(alphanumerics_no)) {
+         e_error = 1;
+         $('.model_no').html('Illegal character(s) used, Check again.');
+      } else {
+         $('.model_no').html('');
+      }
+   }
+
+   if (machine_type == "") {
+      e_error = 1;
+      $('.machine_type').html('Machine Type is Required.');
+   } else {
+      $('.machine_type').html('');
+   }
+
+   if (cost == "") {
+      e_error = 1;
+      $('.cost').html('Cost is Required.');
+   } else {
+      if (!cost.match(onlynumerics_withdot)) {
+         e_error = 1;
+         $('.cost').html('Only numeric value, Check again.');
+      } else if(parseFloat(cost) <= 0.00){
+         e_error = 1;
+         $('.cost').html('Always greater than 0, Check again.');
+      } else {
+         $('.cost').html('');
+      }
+   }
+
+   if (capacity == "") {
+      e_error = 1;
+      $('.capacity').html('Capacity is Required.');
+   } else {
+      if (!capacity.match(onlynumerics_withdot)) {
+         e_error = 1;
+         $('.capacity').html('Only numeric value, Check again.');
+      } else {
+         $('.capacity').html('');
+      }
+   }
+
+   if (proj_measuring_unit == "") {
+      e_error = 1;
+      $('.proj_measuring_unit').html('Unit is Required.');
+   } else {
+      if (!proj_measuring_unit.match(onlynumerics)) {
+         e_error = 1;
+         $('.proj_measuring_unit').html('Only numeric value, Check again.');
+      } else {
+         $('.proj_measuring_unit').html('');
+      }
+   }
+
+
+   if (e_error == 1) {
+      $('.div_roller_total').fadeOut();
+      $(".text-error").fadeIn();
+      $('.get_error_total').html(error_message);
+      if(error_message != ""){
+         $(".get_error_total").fadeIn();
+      }
+      e_error = 0;
+      error_message = '';
+      $('#add_machine_id').prop("disabled",false);
+      setTimeout(function() {
+         $('.text-error, .get_error_total').fadeOut();
+         // $('.get_error_total').html('');
+      }, delay);
+   } 
+   else {
+      var form_data = new FormData();
+      form_data.append('machine_name', machine_name);
+      form_data.append('manufacturer_name', manufacturer_name);
+      form_data.append('serial_no', serial_no);
+      form_data.append('model_no', model_no);
+      form_data.append('machine_type', machine_type);
+      form_data.append('cost', cost);
+      form_data.append('capacity', capacity);
+      form_data.append('proj_measuring_unit', proj_measuring_unit);
+
+      $.ajax({
+         method: 'POST',
+         url: '<?php echo base_url() . "userset/ajax_add_machine"; ?>',
+         data: form_data,
+         dataType: 'JSON',
+         contentType: false,
+         processData: false,
+         success: function(data) {
+            if (data.msg == 1) {
+               $('.div_roller_total').fadeOut();
+               $('.get_success_total').html('Machine is added Successfully.');
+               $('.get_success_total').fadeIn();
+
+               $('#machine_name').val('');
+               $('#manufacturer_name').val('');
+               $('#serial_no').val('');
+               $('#model_no').val('');
+               $('#machine_type').html(data.machine_type_option);
+               $('#cost').val('');
+               $('#capacity').val('');
+               $('#proj_measuring_unit').html(data.project_unit_option);
+               
+               var t_cost = $('#proj_plant_machinary_cost').val();
+               if(t_cost == ""){
+                  t_cost = 0.00;
+               }
+               t_cost = parseFloat(t_cost) + parseFloat(cost);
+               $('#proj_plant_machinary_cost').val(t_cost.toFixed(2));
+               get_final_project_cost();
+               $('#tbody_id').append(data.table_row);
+
+               setTimeout(function() {
+                  $('.get_success_total').fadeOut();
+                  $('#add_machine_id').prop("disabled",false);
+               }, 3000);
+
+            } else {
+               $('.div_roller_total').fadeOut();
+               // error_message = "There have some problem to Update Data, Try again.";
+               error_message = data.e_msg;
+               $('.get_error_total').html(error_message);
+               $(".get_error_total").fadeIn();
+               setTimeout(function() {
+                  $('.get_error_total').fadeOut();
+                  $('#add_machine_id').prop("disabled",false);
+               }, delay);
+            }
+
+         }
+      });
+   }
+}
+
+function goto_prev_chk(){
+   $(".div_roller_total2").fadeIn();
+   $('#prev_btn, #next_btn').prop('disabled', true);
+   window.location.replace("<?php echo site_url('userset/goto_prev_step_aftercheck/2')?>");
+}
+
+function submitProjectCost()
+{
+   $(".div_roller_total2").fadeIn();
+   $('#prev_btn, #next_btn').prop('disabled', true);
+   var e_error = 0;
+   var error_message = '';
+
+   var error_message = 'There have some errors plese check above, Try again.';
+   var alphaletters_spaces = /^[A-Za-z ]+$/;
+   var alphaletters = /^[A-Za-z]+$/;
+   var alphanumerics_withspace = /^[A-Za-z0-9/() ]+$/;
+   var alphanumerics_spaces = /^[A-Za-z0-9_,\- ]+$/;
+   var alphanumerics_no = /^[A-Za-z0-9_/&(@%=<>)\[\]+;:.',\- ]+$/;
+   var onlynumerics = /^[0-9]+$/;
+   var onlynumerics_withdot = /^[0-9.]+$/;
+   var specials_char = /[~`!#$%\^&*+=\[\]\\';./{}()|\\":<>\?]/g;
+   var alphanumerics = /^[A-Za-z0-9]+$/;
+   var emailpattern = /^\b[A-Z0-9._%-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b$/i;
+   var allowedExtensions = /(\.pdf|\.PDF|\.jpg|\.jpeg|\.png|\.JPG|\.JPEG|\.PNG)$/i;
+
+   var proj_land_building_cost = $('#proj_land_building_cost').val().trim();
+   var proj_plant_machinary_cost = $('#proj_plant_machinary_cost').val().trim();
+   var proj_misc_fixed_assets = $('#proj_misc_fixed_assets').val().trim();
+   var proj_preli_preopearative_expenses = $('#proj_preli_preopearative_expenses').val().trim();
+   var proj_contingencies_etc = $('#proj_contingencies_etc').val().trim();
+   var proj_working_capital_margin = $('#proj_working_capital_margin').val().trim();
+   var proj_others = $('#proj_others').val().trim();
+   var proj_total_project_cost = $('#proj_total_project_cost').val().trim();
+   
+   var proj_promoter_contribution = $('#proj_promoter_contribution').val().trim();
+   var proj_term_loan_from_bank = $('#proj_term_loan_from_bank').val().trim();
+   var proj_finance_others = $('#proj_finance_others').val().trim();
+   var proj_total_means_of_finance = $('#proj_total_means_of_finance').val().trim();
+   
+   var proj_working_capital = $('#proj_working_capital').val().trim();
+   var proj_subsity_claimed = $('#proj_subsity_claimed').val().trim();
+
+   var proj_indirect_male = $('#proj_indirect_male').val().trim();
+   var proj_indirect_female = $('#proj_indirect_female').val().trim();
+   var proj_direct_male = $('#proj_direct_male').val().trim();
+   var proj_direct_female = $('#proj_direct_female').val().trim();
+   
+   if(proj_land_building_cost == ""){
+      e_error = 1;
+      $('.proj_land_building_cost').html('Land & Buiding Cost is Required.');
+   }else{
+      if(!proj_land_building_cost.match(onlynumerics_withdot)){
+         e_error = 1;
+         $('.proj_land_building_cost').html('Land & Buiding Cost use Numeric Value.');
+      }else{
+         $('.proj_land_building_cost').html('');
+      }	
+   }
+
+   if(proj_plant_machinary_cost == ""){
+      e_error = 1;
+      $('.proj_plant_machinary_cost').html('Plant and Machineries Cost is Required.');
+   }else{
+      if(!proj_plant_machinary_cost.match(onlynumerics_withdot)){
+         e_error = 1;
+         $('.proj_plant_machinary_cost').html('Plant and Machineries Cost use Numeric Value.');
+      }else if(parseFloat(proj_plant_machinary_cost) <= 0.00){
+         e_error = 1;
+         $('.proj_plant_machinary_cost').html('Plant and Machineries Cost always greater than 0.');
+      }else{
+         $('.proj_plant_machinary_cost').html('');
+      }	
+   }
+
+   if(proj_misc_fixed_assets == ""){
+      e_error = 1;
+      $('.proj_misc_fixed_assets').html('Misc. Fixed Assets is Required.');
+   }else{
+      if(!proj_misc_fixed_assets.match(onlynumerics_withdot)){
+         e_error = 1;
+         $('.proj_misc_fixed_assets').html('Misc. Fixed Assets use Numeric Value.');
+      }else{
+         $('.proj_misc_fixed_assets').html('');
+      }	
+   }
+   if(proj_preli_preopearative_expenses == ""){
+      e_error = 1;
+      $('.proj_preli_preopearative_expenses').html('Preli. & Pre-Operative Expenses is Required.');
+   }else{
+      if(!proj_preli_preopearative_expenses.match(onlynumerics_withdot)){
+         e_error = 1;
+         $('.proj_preli_preopearative_expenses').html('Preli. & Pre-Operative Expenses use Numeric Value.');
+      }else{
+         $('.proj_preli_preopearative_expenses').html('');
+      }	
+   }
+   if(proj_contingencies_etc == ""){
+      e_error = 1;
+      $('.proj_contingencies_etc').html('Contingencies etc. is Required.');
+   }else{
+      if(!proj_contingencies_etc.match(onlynumerics_withdot)){
+         e_error = 1;
+         $('.proj_contingencies_etc').html('Contingencies etc. use Numeric Value.');
+      }else{
+         $('.proj_contingencies_etc').html('');
+      }	
+   }
+   if(proj_working_capital_margin == ""){
+      e_error = 1;
+      $('.proj_working_capital_margin').html('Working Capital Margin is Required.');
+   }else{
+      if(!proj_working_capital_margin.match(onlynumerics_withdot)){
+         e_error = 1;
+         $('.proj_working_capital_margin').html('Working Capital Margin use Numeric Value.');
+      }else{
+         $('.proj_working_capital_margin').html('');
+      }	
+   }
+   if(proj_others == ""){
+      e_error = 1;
+      $('.proj_others').html('Others is Required.');
+   }else{
+      if(!proj_others.match(onlynumerics_withdot)){
+         e_error = 1;
+         $('.proj_others').html('Others use Numeric Value.');
+      }else{
+         $('.proj_others').html('');
+      }	
+   }
+   if(proj_total_project_cost == ""){
+      e_error = 1;
+      $('.proj_total_project_cost').html('Total Project Cost is Required.');
+   }else{
+      if(!proj_total_project_cost.match(onlynumerics_withdot)){
+         e_error = 1;
+         $('.proj_total_project_cost').html('Total Project Cost use Numeric Value.');
+      }else if(parseFloat(proj_total_project_cost) <= 0.00){
+         e_error = 1;
+         $('.proj_total_project_cost').html('Total Project Cost always greater than 0.');
+      }else{
+         $('.proj_total_project_cost').html('');
+      }	
+   }
+
+   if(proj_promoter_contribution == ""){
+      e_error = 1;
+      $('.proj_promoter_contribution').html('Promoters\' Contribution is Required.');
+   }else{
+      if(!proj_promoter_contribution.match(onlynumerics_withdot)){
+         e_error = 1;
+         $('.proj_promoter_contribution').html('Promoters\' Contribution use Numeric Value.');
+      }else{
+         $('.proj_promoter_contribution').html('');
+      }
+   }
+   if(proj_term_loan_from_bank == ""){
+      e_error = 1;
+      $('.proj_term_loan_from_bank').html('Term loan from bank / F.I. is Required.');
+   }else{
+      if(!proj_term_loan_from_bank.match(onlynumerics_withdot)){
+         e_error = 1;
+         $('.proj_term_loan_from_bank').html('Term loan from bank / F.I. use Numeric Value.');
+      }else{
+         $('.proj_term_loan_from_bank').html('');
+      }	
+   }
+   if(proj_finance_others == ""){
+      e_error = 1;
+      $('.proj_finance_others').html('Others is Required.');
+   }else{
+      if(!proj_finance_others.match(onlynumerics_withdot)){
+         e_error = 1;
+         $('.proj_finance_others').html('Others use Numeric Value.');
+      }else{
+         $('.proj_finance_others').html('');
+      }	
+   }
+   if(proj_total_means_of_finance == ""){
+      e_error = 1;
+      $('.proj_total_means_of_finance').html('Total Means of Finance is Required.');
+   }else{
+      if(!proj_total_means_of_finance.match(onlynumerics_withdot)){
+         e_error = 1;
+         $('.proj_total_means_of_finance').html('Total Means of Finance use Numeric Value.');
+      }else{
+         $('.proj_total_means_of_finance').html('');
+      }	
+   }
+
+   if(proj_total_project_cost != "" && proj_total_means_of_finance != ""){
+      if(proj_total_project_cost != proj_total_means_of_finance){
+         e_error = 1;
+         error_message = error_message + '<br/>Total Project Cost and Total Means of Finance must be Same, Check again.'
+      }
+   }
+
+   if(proj_working_capital == ""){
+      e_error = 1;
+      $('.proj_working_capital').html('Working Capital is Required.');
+   }else{
+      if(!proj_working_capital.match(onlynumerics_withdot)){
+         e_error = 1;
+         $('.proj_working_capital').html('Working Capital use Numeric Value.');
+      }else{
+         $('.proj_working_capital').html('');
+      }	
+   }
+   if(proj_subsity_claimed == ""){
+      e_error = 1;
+      $('.proj_subsity_claimed').html('Subsidy claimed under WBFCIS - 2021 is Required.');
+   }else{
+      if(!proj_subsity_claimed.match(onlynumerics_withdot)){
+         e_error = 1;
+         $('.proj_subsity_claimed').html('Subsidy claimed under WBFCIS - 2021 use Numeric Value.');
+      }else{
+         $('.proj_subsity_claimed').html('');
+      }	
+   }
+
+   if(proj_indirect_male == ""){
+      e_error = 1;
+      $('.proj_indirect_male').html('Indirect Male is Required.');
+   }else{
+      if(!proj_indirect_male.match(onlynumerics)){
+         e_error = 1;
+         $('.proj_indirect_male').html('Indirect Male use Numeric Value.');
+      }else{
+         $('.proj_indirect_male').html('');
+      }	
+   }
+   if(proj_indirect_female == ""){
+      e_error = 1;
+      $('.proj_indirect_female').html('Indirect Female is Required.');
+   }else{
+      if(!proj_indirect_female.match(onlynumerics)){
+         e_error = 1;
+         $('.proj_indirect_female').html('Indirect Female use Numeric Value.');
+      }else{
+         $('.proj_indirect_female').html('');
+      }	
+   }
+   if(proj_direct_male == ""){
+      e_error = 1;
+      $('.proj_direct_male').html('Direct Male is Required.');
+   }else{
+      if(!proj_direct_male.match(onlynumerics)){
+         e_error = 1;
+         $('.proj_direct_male').html('Direct Male use Numeric Value.');
+      }else{
+         $('.proj_direct_male').html('');
+      }	
+   }
+   if(proj_direct_female == ""){
+      e_error = 1;
+      $('.proj_direct_female').html('Direct Female is Required.');
+   }else{
+      if(!proj_direct_female.match(onlynumerics)){
+         e_error = 1;
+         $('.proj_direct_female').html('Direct Female use Numeric Value.');
+      }else{
+         $('.proj_direct_female').html('');
+      }	
+   }
+
+   if(e_error == 1){
+      $('.div_roller_total2').fadeOut();
+      if(error_message != ""){
+         $('.get_error_total2').html(error_message);
+         $(".get_error_total2").fadeIn();
+      }
+      $(".text-error").fadeIn();
+      $('#prev_btn, #next_btn').prop('disabled', false);
+      setTimeout(function(){ $('.text-error').html('');
+         $('.text-error, .get_error_total2').fadeOut(); }, 5000);
+   }else{
+
+      var form_data = new FormData();
+      form_data.append('proj_land_building_cost', proj_land_building_cost);
+      form_data.append('proj_plant_machinary_cost', proj_plant_machinary_cost);
+      form_data.append('proj_misc_fixed_assets', proj_misc_fixed_assets);
+      form_data.append('proj_preli_preopearative_expenses', proj_preli_preopearative_expenses);
+      form_data.append('proj_contingencies_etc', proj_contingencies_etc);
+      form_data.append('proj_working_capital_margin', proj_working_capital_margin);
+      form_data.append('proj_others', proj_others);
+      form_data.append('proj_total_project_cost', proj_total_project_cost);
+
+      form_data.append('proj_promoter_contribution', proj_promoter_contribution);
+      form_data.append('proj_term_loan_from_bank', proj_term_loan_from_bank);
+      form_data.append('proj_finance_others', proj_finance_others);
+      form_data.append('proj_total_means_of_finance', proj_total_means_of_finance);
+
+      form_data.append('proj_working_capital', proj_working_capital);
+      form_data.append('proj_subsity_claimed', proj_subsity_claimed);
+
+      form_data.append('proj_indirect_male', proj_indirect_male);
+      form_data.append('proj_indirect_female', proj_indirect_female);
+      form_data.append('proj_direct_male', proj_direct_male);
+      form_data.append('proj_direct_female', proj_direct_female);
+      //form_data.append("files", files[0]);
+
+      $.ajax({
+         method: 'POST',
+         url: '<?php echo base_url() . "userset/update_projectcost_set_details"; ?>',
+         data: form_data,
+         dataType: 'JSON',
+         contentType: false,
+         processData: false,
+         success: function(data) {
+            //alert(data.msg);
+            if (data.msg == 1) {
+               //console.log(data);
+               //alert(data.msg[0].space_rate);
+               $('.div_roller_total2').fadeOut();
+               $('.get_success_total2').html('Project Cost Details is Updated Successfully.');
+               $(".get_success_total2").fadeIn();
+               $('input, select').val('');
+               $('input').html('');
+               setTimeout(function() {
+                  $('.get_success_total2').fadeOut();
+                  window.location.replace("<?php echo site_url('userset/proj_document_details')?>");
+               }, 3000);
+
+            } else {
+               $('.div_roller_total2').fadeOut();
+               $('.get_error_total2').html(data.e_msg);
+               $(".get_error_total2").fadeIn();
+               setTimeout(function(){ $('.get_error_total2').fadeOut(); }, 3000);
+               $('#prev_btn, #next_btn').prop('disabled', false);     
+            }
+
+         }
+      });
+   }
+
+}
+
+function get_total_project_cost()
+{ 
+   // alert(112);
+   var total_cost = 0.00;
+
+   <?php if(!empty($machine_data)){?>
+      $("input[type=text][name='cost[]']").each(function() {
+      //alert(11);
+
+      total_cost = parseFloat(total_cost) + parseFloat($(this).val())
+        });
+   <?php } ?>
+   
+
+            $("input[type=text][name='cost[]']").each(function() {
+      //alert(11);
+
+      total_cost = parseFloat(total_cost) + parseFloat($(this).val())
+        });
+
+   
+   $("input[type=text][name=proj_plant_machinary_cost]").val(parseFloat(total_cost));
+   //$("input[type=text][name=proj_total_project_cost]").val(total_cost);
+   //alert(parseFloat(total_cost));
+}
+
+function get_total_finance_cost()
+{
+      var total_cost = 0 
+      var proj_promoter_contribution=parseFloat($("input[type=text][name='proj_promoter_contribution']").val());
+      var proj_finance_others=parseFloat($("input[type=text][name='proj_finance_others']").val());
+      var proj_term_loan_from_bank=parseFloat($("input[type=text][name='proj_term_loan_from_bank']").val());
+
+      if(proj_promoter_contribution>0)
+    {
+      total_cost = total_cost + proj_promoter_contribution;
+    }
+
+    if(proj_finance_others>0)
+    {
+      total_cost = total_cost + proj_finance_others;
+    }
+
+    if(proj_term_loan_from_bank>0)
+    {
+      total_cost = total_cost + proj_term_loan_from_bank;
+    }
+   
+     $("input[type=text][name=proj_total_means_of_finance]").val(total_cost.toFixed(2));
+}
+
+function get_final_project_cost()
+{
+   var total_project_cost = 0;  
+   var proj_plant_machinary_cost=parseFloat($("input[type=text][name='proj_plant_machinary_cost']").val());
+
+   var proj_land_building_cost=parseFloat($("input[type=text][name='proj_land_building_cost']").val());
+   var proj_misc_fixed_assets=parseFloat($("input[type=text][name='proj_misc_fixed_assets']").val());
+   var proj_contingencies_etc=parseFloat($("input[type=text][name='proj_contingencies_etc']").val());
+   var proj_others=parseFloat($("input[type=text][name='proj_others']").val());
+   var proj_preli_preopearative_expenses=parseFloat($("input[type=text][name='proj_preli_preopearative_expenses']").val());
+   var proj_working_capital_margin=parseFloat($("input[type=text][name='proj_working_capital_margin']").val());
+
+
+    if(proj_land_building_cost>0)
+    {
+      total_project_cost = total_project_cost + proj_land_building_cost;
+    }
+
+    if(proj_misc_fixed_assets>0)
+    {
+      total_project_cost = total_project_cost + proj_misc_fixed_assets;
+    }
+
+    if(proj_contingencies_etc>0)
+    {
+      total_project_cost = total_project_cost + proj_contingencies_etc;
+    }
+
+    if(proj_others>0)
+    {
+      total_project_cost = total_project_cost + proj_others;
+    }
+
+    if(proj_preli_preopearative_expenses>0)
+    {
+      total_project_cost = total_project_cost + proj_preli_preopearative_expenses;
+    }
+
+    if(proj_working_capital_margin>0)
+    {
+      total_project_cost = total_project_cost + proj_working_capital_margin;
+    }
+
+    //sum of total machinary cost..
+    if(proj_plant_machinary_cost>0)
+    {
+      total_project_cost = total_project_cost + proj_plant_machinary_cost;
+    }
+
+   
+   $("input[type=text][name=proj_total_project_cost]").val(total_project_cost.toFixed(2));
+   get_total_subsity();
+}
+ 
+function get_total_subsity()
+{
+   var total_subsity_cost = 0;
+
+   var proj_plant_machinary_cost=parseFloat($("input[type=text][name='proj_plant_machinary_cost']").val());
+   //var proj_total_project_cost=parseFloat($("input[type=text][name='proj_total_project_cost']").val());
+   if(proj_plant_machinary_cost>0)
+   {
+      total_subsity_cost = (proj_plant_machinary_cost * 0.4);
+      if(total_subsity_cost >= 10){
+         $("input[type=text][name=proj_subsity_claimed]").val(10);
+      }else{
+         $("input[type=text][name=proj_subsity_claimed]").val(total_subsity_cost.toFixed(2));
+      }
+   }else{
+      $("input[type=text][name=proj_subsity_claimed]").val(0);
+   }
+   //var proj_working_capital=parseFloat($("input[type=text][name='proj_working_capital']").val());
+
+   /*var error_msg = '';
+   if(proj_working_capital != "" || isNaN(proj_working_capital) == false){
+      if(proj_total_project_cost >= proj_working_capital)
+      {
+         total_subsity_cost = proj_total_project_cost - proj_working_capital;
+         $("input[type=text][name=proj_subsity_claimed]").val(total_subsity_cost.toFixed(2));
+      }else{
+         $("input[type=text][name=proj_subsity_claimed]").val('');
+         error_msg = 'working capital cannot be greather then ' + proj_total_project_cost;
+         $(".proj_subsity_claimed").html(error_msg);
+         $(".text-error").fadeIn();
+         setTimeout(function(){ $('.text-error').fadeOut(); }, 5000);
+      }
+   }else{
+      $(".proj_subsity_claimed").html('');
+   }*/
+}
+
+
+      $(function(){
+         $('#alert_msg, .text-error').delay(8000).fadeOut();
+         $('.msg_cont2, .text-error').delay(8000).fadeOut();
+      });
+      //$(document).ready(function () {
+           // alert("hi");
+       $("#addFrm input[name='proj_land_building_cost']").keydown(function (event) {
+        //alert(event.keyCode);
+        var building_cost = $("#addFrm input[name='proj_land_building_cost']").val();
+        
+           // Allow only backspace and delete
+           if (event.keyCode == 46 || event.keyCode == 8  || event.keyCode==116  || event.keyCode==9 || event.keyCode==37 || event.keyCode==39 || event.keyCode==17 || event.keyCode==86 || event.keyCode==110) {
+               // let it happen, don't do anything
+           }
+           else {
+               // Ensure that it is a number and stop the keypress
+               if ((event.keyCode > 47 && event.keyCode < 58 ) || (event.keyCode > 94 && event.keyCode < 106 )) {
+                $('.text-error').hide();
+               }else{
+                
+                if(building_cost=='')
+                {
+                  $('.proj_land_building_cost').show().html('Only Numeric Vaule');
+                  setTimeout(function(){$('.proj_land_building_cost').hide()}, 1000);
+                }
+                event.preventDefault();
+               }
+           }
+       });
+       $("#addFrm input[name='cost[]']").keydown(function (event) {
+        //alert(event.keyCode);
+        var building_cost = $("#addFrm input[name='cost[]']").val();
+        
+           // Allow only backspace and delete
+           if (event.keyCode == 46 || event.keyCode == 8  || event.keyCode==116  || event.keyCode==9 || event.keyCode==37 || event.keyCode==39 || event.keyCode==17 || event.keyCode==86 || event.keyCode==110) {
+               // let it happen, don't do anything
+           }
+           else {
+               // Ensure that it is a number and stop the keypress
+               if ((event.keyCode > 47 && event.keyCode < 58 ) || (event.keyCode > 94 && event.keyCode < 106 )) {
+                $('.text-error').hide();
+               }else{
+                
+                if(building_cost=='')
+                {
+                $('.cost').show().html('Only numbers');
+                setTimeout(function(){$('.cost').hide()}, 1000);
+                }
+                event.preventDefault();
+               }
+           }
+       });
+       $("#addFrm input[name='proj_misc_fixed_assets']").keydown(function (event) {
+        //alert(event.keyCode);
+        var proj_misc_fixed_assets = $("#addFrm input[name='proj_misc_fixed_assets']").val();
+        
+           // Allow only backspace and delete
+           if (event.keyCode == 46 || event.keyCode == 8  || event.keyCode==116  || event.keyCode==9 || event.keyCode==37 || event.keyCode==39 || event.keyCode==17 || event.keyCode==86 || event.keyCode==110) {
+               // let it happen, don't do anything
+           }
+           else {
+               // Ensure that it is a number and stop the keypress
+               if ((event.keyCode > 47 && event.keyCode < 58 ) || (event.keyCode > 94 && event.keyCode < 106 )) {
+                $('.text-error').hide();
+               }else{
+                
+                if(proj_misc_fixed_assets=='')
+                {
+                $('.proj_misc_fixed_assets').show().html('Only Numeric Value');
+                setTimeout(function(){$('.proj_misc_fixed_assets').hide()}, 1000);
+                }
+                event.preventDefault();
+               }
+           }
+       });
+       $("#addFrm input[name='proj_contingencies_etc']").keydown(function (event) {
+        //alert(event.keyCode);
+        var proj_contingencies_etc = $("#addFrm input[name='proj_contingencies_etc']").val();
+        
+           // Allow only backspace and delete
+           if (event.keyCode == 46 || event.keyCode == 8  || event.keyCode==116  || event.keyCode==9 || event.keyCode==37 || event.keyCode==39 || event.keyCode==17 || event.keyCode==86 || event.keyCode==110) {
+               // let it happen, don't do anything
+           }
+           else {
+               // Ensure that it is a number and stop the keypress
+               if ((event.keyCode > 47 && event.keyCode < 58 ) || (event.keyCode > 94 && event.keyCode < 106 )) {
+                $('.text-error').hide();
+               }else{
+                
+                if(proj_contingencies_etc=='')
+                {
+                $('.proj_contingencies_etc').show().html('Only Numeric Value');
+                setTimeout(function(){$('.proj_contingencies_etc').hide()}, 1000);
+                }
+                event.preventDefault();
+               }
+           }
+       });
+       $("#addFrm input[name='proj_preli_preopearative_expenses']").keydown(function (event) {
+        //alert(event.keyCode);
+        var proj_preli_preopearative_expenses = $("#addFrm input[name='proj_preli_preopearative_expenses']").val();
+        
+           // Allow only backspace and delete
+           if (event.keyCode == 46 || event.keyCode == 8  || event.keyCode==116  || event.keyCode==9 || event.keyCode==37 || event.keyCode==39 || event.keyCode==17 || event.keyCode==86 || event.keyCode==110) {
+               // let it happen, don't do anything
+           }
+           else {
+               // Ensure that it is a number and stop the keypress
+               if ((event.keyCode > 47 && event.keyCode < 58 ) || (event.keyCode > 94 && event.keyCode < 106 )) {
+                $('.text-error').hide();
+               }else{
+                
+                if(proj_preli_preopearative_expenses=='')
+                {
+                $('.proj_preli_preopearative_expenses').show().html('Only Numeric Value');
+                setTimeout(function(){$('.proj_preli_preopearative_expenses').hide()}, 1000);
+                }
+                event.preventDefault();
+               }
+           }
+       });
+       $("#addFrm input[name='proj_working_capital_margin']").keydown(function (event) {
+        //alert(event.keyCode);
+        var proj_working_capital_margin = $("#addFrm input[name='proj_working_capital_margin']").val();
+        
+           // Allow only backspace and delete
+           if (event.keyCode == 46 || event.keyCode == 8  || event.keyCode==116  || event.keyCode==9 || event.keyCode==37 || event.keyCode==39 || event.keyCode==17 || event.keyCode==86 || event.keyCode==110) {
+               // let it happen, don't do anything
+           }
+           else {
+               // Ensure that it is a number and stop the keypress
+               if ((event.keyCode > 47 && event.keyCode < 58 ) || (event.keyCode > 94 && event.keyCode < 106 )) {
+                $('.text-error').hide();
+               }else{
+                
+                if(proj_working_capital_margin=='')
+                {
+                $('.proj_working_capital_margin').show().html('Only Numeric Value');
+                setTimeout(function(){$('.proj_working_capital_margin').hide()}, 1000);
+                }
+                event.preventDefault();
+               }
+           }
+       });
+       $("#addFrm input[name='proj_others']").keydown(function (event) {
+        //alert(event.keyCode);
+        var proj_others = $("#addFrm input[name='proj_others']").val();
+        
+           // Allow only backspace and delete
+           if (event.keyCode == 46 || event.keyCode == 8  || event.keyCode==116  || event.keyCode==9 || event.keyCode==37 || event.keyCode==39 || event.keyCode==17 || event.keyCode==86 || event.keyCode==110) {
+               // let it happen, don't do anything
+           }
+           else {
+               // Ensure that it is a number and stop the keypress
+               if ((event.keyCode > 47 && event.keyCode < 58 ) || (event.keyCode > 94 && event.keyCode < 106 )) {
+                $('.text-error').hide();
+               }else{
+                
+                if(proj_others=='')
+                {
+                $('.proj_others').show().html('Only Numeric Value');
+                setTimeout(function(){$('.proj_others').hide()}, 1000);
+                }
+                event.preventDefault();
+               }
+           }
+       });
+       
+       
+       $("#addFrm input[name='proj_promoter_contribution']").keydown(function (event) {
+        //alert(event.keyCode);
+        var proj_promoter_contribution = $("#addFrm input[name='proj_promoter_contribution']").val();
+        
+           // Allow only backspace and delete
+           if (event.keyCode == 46 || event.keyCode == 8  || event.keyCode==116  || event.keyCode==9 || event.keyCode==37 || event.keyCode==39 || event.keyCode==17 || event.keyCode==86 || event.keyCode==110) {
+               // let it happen, don't do anything
+           }
+           else {
+               // Ensure that it is a number and stop the keypress
+               if ((event.keyCode > 47 && event.keyCode < 58 ) || (event.keyCode > 94 && event.keyCode < 106 )) {
+                $('.text-error').hide();
+               }else{
+                
+                if(proj_promoter_contribution=='')
+                {
+                $('.proj_promoter_contribution').show().html('Only Numeric Value');
+                setTimeout(function(){$('.proj_promoter_contribution').hide()}, 1000);
+                }
+                event.preventDefault();
+               }
+           }
+       });
+       $("#addFrm input[name='proj_term_loan_from_bank']").keydown(function (event) {
+        //alert(event.keyCode);
+        var proj_term_loan_from_bank = $("#addFrm input[name='proj_term_loan_from_bank']").val();
+        
+           // Allow only backspace and delete
+           if (event.keyCode == 46 || event.keyCode == 8  || event.keyCode==116  || event.keyCode==9 || event.keyCode==37 || event.keyCode==39 || event.keyCode==17 || event.keyCode==86 || event.keyCode==110) {
+               // let it happen, don't do anything
+           }
+           else {
+               // Ensure that it is a number and stop the keypress
+               if ((event.keyCode > 47 && event.keyCode < 58 ) || (event.keyCode > 94 && event.keyCode < 106 )) {
+                $('.text-error').hide();
+               }else{
+                
+                if(proj_term_loan_from_bank=='')
+                {
+                $('.proj_term_loan_from_bank').show().html('Only Numeric Value');
+                setTimeout(function(){$('.proj_term_loan_from_bank').hide()}, 1000);
+                }
+                event.preventDefault();
+               }
+           }
+       });
+       $("#addFrm input[name='proj_finance_others']").keydown(function (event) {
+        //alert(event.keyCode);
+        var proj_finance_others = $("#addFrm input[name='proj_finance_others']").val();
+        
+           // Allow only backspace and delete
+           if (event.keyCode == 46 || event.keyCode == 8  || event.keyCode==116  || event.keyCode==9 || event.keyCode==37 || event.keyCode==39 || event.keyCode==17 || event.keyCode==86 || event.keyCode==110) {
+               // let it happen, don't do anything
+           }
+           else {
+               // Ensure that it is a number and stop the keypress
+               if ((event.keyCode > 47 && event.keyCode < 58 ) || (event.keyCode > 94 && event.keyCode < 106 )) {
+                $('.text-error').hide();
+               }else{
+                
+                if(proj_finance_others=='')
+                {
+                $('.proj_finance_others').show().html('Only Numeric Value');
+                setTimeout(function(){$('.proj_finance_others').hide()}, 1000);
+                }
+                event.preventDefault();
+               }
+           }
+       });
+
+
+       $("#addFrm input[name='proj_indirect_male']").keydown(function (event) {
+        //alert(event.keyCode);
+        var proj_indirect_male = $("#addFrm input[name='proj_indirect_male']").val();
+        
+           // Allow only backspace and delete
+           if (event.keyCode == 46 || event.keyCode == 8  || event.keyCode==116  || event.keyCode==9 || event.keyCode==37 || event.keyCode==39 || event.keyCode==17 || event.keyCode==86) {
+               // let it happen, don't do anything
+           }
+           else {
+               // Ensure that it is a number and stop the keypress
+               if ((event.keyCode > 47 && event.keyCode < 58 ) || (event.keyCode > 94 && event.keyCode < 106 )) {
+                $('.text-error').hide();
+               }else{
+                
+                if(proj_indirect_male=='')
+                {
+                $('.proj_indirect_male').show().html('Only numbers');
+                setTimeout(function(){$('.proj_indirect_male').hide()}, 1000);
+                }
+                event.preventDefault();
+               }
+           }
+       });
+       $("#addFrm input[name='proj_indirect_female']").keydown(function (event) {
+        //alert(event.keyCode);
+        var proj_indirect_female = $("#addFrm input[name='proj_indirect_female']").val();
+        
+           // Allow only backspace and delete
+           if (event.keyCode == 46 || event.keyCode == 8  || event.keyCode==116  || event.keyCode==9 || event.keyCode==37 || event.keyCode==39 || event.keyCode==17 || event.keyCode==86) {
+               // let it happen, don't do anything
+           }
+           else {
+               // Ensure that it is a number and stop the keypress
+               if ((event.keyCode > 47 && event.keyCode < 58 ) || (event.keyCode > 94 && event.keyCode < 106 )) {
+                $('.text-error').hide();
+               }else{
+                
+                if(proj_indirect_female=='')
+                {
+                $('.proj_indirect_female').show().html('Only numbers');
+                setTimeout(function(){$('.proj_indirect_female').hide()}, 1000);
+                }
+                event.preventDefault();
+               }
+           }
+       });
+       ///
+       $("#addFrm input[name='proj_direct_male']").keydown(function (event) {
+        //alert(event.keyCode);
+        var proj_direct_male = $("#addFrm input[name='proj_direct_male']").val();
+        
+           // Allow only backspace and delete
+           if (event.keyCode == 46 || event.keyCode == 8  || event.keyCode==116  || event.keyCode==9 || event.keyCode==37 || event.keyCode==39 || event.keyCode==17 || event.keyCode==86) {
+               // let it happen, don't do anything
+           }
+           else {
+               // Ensure that it is a number and stop the keypress
+               if ((event.keyCode > 47 && event.keyCode < 58 ) || (event.keyCode > 94 && event.keyCode < 106 )) {
+                $('.text-error').hide();
+               }else{
+                
+                if(proj_direct_male=='')
+                {
+                $('.proj_direct_male').show().html('Only numbers');
+                setTimeout(function(){$('.proj_direct_male').hide()}, 1000);
+                }
+                event.preventDefault();
+               }
+           }
+       });
+       $("#addFrm input[name='proj_direct_female']").keydown(function (event) {
+        //alert(event.keyCode);
+        var proj_direct_female = $("#addFrm input[name='proj_direct_female']").val();
+        
+           // Allow only backspace and delete
+           if (event.keyCode == 46 || event.keyCode == 8  || event.keyCode==116  || event.keyCode==9 || event.keyCode==37 || event.keyCode==39 || event.keyCode==17 || event.keyCode==86) {
+               // let it happen, don't do anything
+           }
+           else {
+               // Ensure that it is a number and stop the keypress
+               if ((event.keyCode > 47 && event.keyCode < 58 ) || (event.keyCode > 94 && event.keyCode < 106 )) {
+                $('.text-error').hide();
+               }else{
+                
+                if(proj_direct_female=='')
+                {
+                $('.proj_direct_female').show().html('Only numbers');
+                setTimeout(function(){$('.proj_direct_female').hide()}, 1000);
+                }
+                event.preventDefault();
+               }
+           }
+       });
+
+
+   </script> 

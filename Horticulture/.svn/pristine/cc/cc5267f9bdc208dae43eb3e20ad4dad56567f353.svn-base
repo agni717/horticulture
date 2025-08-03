@@ -1,0 +1,438 @@
+<?php $this->load->view('common/header_hq'); ?>
+<div class="page-body-wrapper">
+
+   <div class="container-fluid">
+      <div class="row">
+         <div class="col-lg-12 mx-auto mt-2">
+            <h4 class="card-title">Dashboard</h4>
+            
+         </div>
+      </div>
+	   <div class="row">
+         <div class="col-lg-12 grid-margin mt-3">
+
+            <div class="card">
+               <div class="card-body">
+				   <?php echo form_open(); ?>
+                   <?php if(!isset($src_disable)){?>
+				    <div class="row justify-content-center mb-2">
+                     <div class="col-lg-2 text-right"><label for="sel1">Select Status:</label></div>
+                     <div class="col-lg-3">
+                        <select class="form-control" id="apl_status" name="apl_status">
+							<option value="">---Please Select---</option>
+							<option value="2">Application Submited</option>
+							<option value="1">Application Saved</option>
+                            <option value="3">Approved by District</option>
+                            <option value="4">Rejected by District</option>
+							<option value="5">Reverted by District</option>
+                            <option value="6">Approved by HQ</option>
+                            <option value="7">Rejected by HQ</option>
+							<option value="8">Reverted by HQ</option>
+							<option value="9">Sanctioned by HQ</option>
+							<option value="10">1st Installment Release Requested</option>
+							<option value="11">1st Installment Approved by District</option>
+							<option value="12">1st Installment Released by HQ</option>
+							<option value="13">2nd Installment Release Requested</option>
+							<option value="14">2nd Installment Approved by District</option>
+							<option value="15">2nd Installment Released by HQ</option>
+                        </select>
+						 <small class="text-error"><?php echo form_error('apl_status');?></small>
+                     </div>
+                     <div class="col-lg-2"><input class="btn btn-info btn-md" type="submit" value="Search" /></div>
+                  </div>
+                  <?php } ?>
+				   <?php echo form_close() ?>
+                  <table id="example" class="table table-striped table-bordered" style="width:100%">
+                           <thead>
+                              <tr>
+                                 <th width="5%">SL No</th>
+                                 <th width="16%">Applicantion No.</th>
+                                 <th width="15%">Applicant Name</th>
+                                 <th width="8%">Email </th>
+                                 <th width="8%">Mobile No</th>
+								  <th width="10%">Disctrict</th>
+								  <th width="10%">Subdivision</th>
+								  <th width="10%">Status</th>
+                                 <th width="20%">Actions</th>
+                              </tr>
+                           </thead>
+                           <tbody>
+                              <?php
+                           if(!empty($list)){
+                           foreach($list as $key=>$row)
+                            {
+                              $application_id = $row->application_id;
+                               ?>
+                              <tr>
+                                 <td><?php echo $key+1; ?></td>
+                                 <td><?php echo $row->application_no;?></td>
+                                 <td><?php echo $row->first_name." ".$row->last_name;?></td>
+                                 <td><?php echo $row->email;?></td>
+                                 <td><?php echo $row->mobile;?></td>
+								  <td><?php echo $row->district_name;?></td>
+								  <td><?php echo $row->subdiv_name;?></td>
+								  <td>
+								  
+								<?php
+									  if($row->is_applicant_submitted == 2){
+										  echo "Application Submitted";
+									  }else if($row->is_applicant_submitted == 1 && $row->is_district_app_reject_revert == 3){
+										  echo "Application Reverted";
+									  }else if($row->is_district_app_reject_revert == 2){
+										  echo "Application Rejected";
+									  }else if($row->is_district_app_reject_revert == 1){
+										  echo "Application Approved by District";
+									  }else if($row->is_hq_app_reject_revert == 2){
+										  echo "Application Rejected by HQ";
+									  }else if($row->is_hq_app_reject_revert == 3 && $row->is_applicant_submitted == 1){
+										  echo "Application Reverted by HQ";
+									  }else if($row->is_hq_app_reject_revert == 1){
+										  echo "Application Approve by HQ";
+									  }else if($row->apply_for_1st_installment_release == 1 && $row->is_dist_approve_1st_installment_release == 0 && $row->first_installment_released_by_HQ == 3){
+										  echo "1st Installment Release Reverted by HQ";
+									  }else if($row->apply_for_1st_installment_release == 1){
+										  echo "1st Installment Release Requested by Applicant";
+									  }else if($row->is_first_sanction == 1 && $row->apply_for_1st_installment_release == 0 && $row->is_dist_approve_1st_installment_release == 3){
+										  echo "1st Installment Release Reverted by District";
+									  }else if($row->is_first_sanction == 1){
+										  echo "Application Sanctioned";
+									  }else if($row->is_dist_approve_1st_installment_release == 1){
+										  echo "1st Installment Release Request Approved by District";
+									  }else if($row->is_dist_approve_1st_installment_release == 2){
+										  echo "1st Installment Release Request Rejected by District";
+									  }else if($row->first_installment_released_by_HQ == 1 && $row->apply_for_second_installment == 0 && $row->is_dist_approve_2nd_installment_release == 3){
+										  echo "2nd Installment Release Reverted by District";
+									  }else if($row->apply_for_second_installment == 1 && $row->is_dist_approve_2nd_installment_release == 0 && $row->second_installment_released_by_HQ == 3){
+										  echo "2nd Installment Release Reverted by HQ";
+									  }else if($row->apply_for_second_installment == 1){
+										  echo "2nd Installment Release Requested by Applicant";
+									  }else if($row->is_dist_approve_2nd_installment_release == 1){
+										  echo "2nd Installment Release Approved by District";
+									  }else if($row->first_installment_released_by_HQ == 1){
+										  echo "1st Installment Released by HQ";
+									  }else if($row->second_installment_released_by_HQ == 1){
+											echo "2nd Installment Released by HQ";
+										}else{
+										  echo "Application in process...";
+									  }
+								  ?>
+								  
+								  </td>
+                                 <td> 
+                                    <?php if(isset($controller)){ ?>
+									 <?php
+							   			$app_id = $row->application_id;
+							   			
+										$dis_url = 'admin/district_dashboard/';
+										$hq_url = 'admin/hq_dashboard/';
+
+										if($admin_utype == 2){?>
+                                        <?php if($row->is_applicant_submitted == 2 || $row->apply_for_1st_installment_release == 1 || $row->apply_for_second_installment == 1){?>
+										<a class="btn btn-info btn-sm" href="<?php echo base_url($dis_url.$controller.$app_id);?>" role="button" style="margin-left: 5px;">Details</a>
+                                        <?php }else{ ?>
+                                        <a class="btn btn-info btn-sm" href="<?php echo base_url($dis_url.'approved_citizen_form_details/'.$app_id);?>" role="button" style="margin-left: 5px;">Details</a>
+                                        <?php } ?>
+										<?php }else{ ?>
+                                        <?php if($row->is_district_app_reject_revert == 1 || $row->is_dist_approve_1st_installment_release == 1 || $row->is_dist_approve_2nd_installment_release  == 1){?>
+										<a class="btn btn-info btn-sm" href="<?php echo base_url($hq_url.$controller.$app_id);?>" role="button" style="margin-left: 5px;">Details</a>
+                                        <?php }else{ ?>
+                                        <a class="btn btn-info btn-sm" href="<?php echo base_url($hq_url.'citizen_form_details/'.$app_id);?>" role="button" style="margin-left: 5px;">Details</a>
+                                        <?php } ?>
+										
+									<?php } ?>
+									 <?php } ?>
+									 <?php if($row->is_hq_app_reject_revert == 1){?>
+									 <a class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#sanctionModal" id="<?php echo $application_id;?>" onclick="lfn_generate_senction_letter(this.id);"  role="button">Generate Sanction Letter</a>
+									 <?php }?>
+									 
+                                 </td>
+                              </tr>
+                              
+                              
+                              
+                              
+                              <?php } }else{ ?>
+                              <div class="col-md-12">
+                              <div class="alert alert-danger">No applicaton found for this Scheme </div>
+                               </div>
+                         <?php } ?>
+                           </tbody>
+                        </table>
+               </div>
+            </div>
+         </div>
+      </div>
+   </div>
+</div>
+
+
+
+<!-- Modal -->
+<div class="modal fade" id="sanctionModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+   <div class="modal-dialog" role="document">
+      <div class="modal-content">
+          <form method="post" name="frmAppRej" id="frmAppRej" enctype="multipart/form-data">
+            <input type="hidden" name="application_id" id="application_id" value="">
+         <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Generate Sanction Latter</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+            </button>
+         </div>
+            <div class="modal-body">
+               <div class="col-lg-12 mt-2 p-0">
+                  <label for="exampleFormControlTextarea1">Remarks</label>
+                  <textarea class="form-control" name="remarks" id="remarks" rows="3"></textarea>
+               </div>
+
+               <div class="col-lg-12 mt-2 p-0 modal_file">
+                  <div class="custom-file">
+                   <input type="file" name="fileApp" id="fileApp" class="custom-file-input" id="inputGroupFile01" aria-describedby="inputGroupFileAddon01">  
+                   <label class="custom-file-label mb-0" for="inputGroupFile01"></label>  
+               </div>
+            </div>
+        
+         </div>
+         <div class="form-group form-row">
+         <div class="col-lg-12 text-center text-msg" id="ar_msg_cont">
+                                          <!-- Message Area -->
+         </div>
+          </div>
+         <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="btn_sanction_submit">Submit</button>
+         </div>
+      </div>
+   </div>
+</div>
+	
+	
+<div class="modal fade" id="paymentModal" tabindex="-1" role="dialog" aria-labelledby="paymentModalLabel" aria-hidden="true">
+   <div class="modal-dialog" role="document" style="min-width: 800px;">
+      <div class="modal-content">
+         <form method="post" name="frmPayment" id="frmPayment" enctype="multipart/form-data" />
+         <input type="hidden" name="application_id" id="application_id" value="" />
+         <div class="modal-header">
+            <h2>Make Payment</h2>
+			 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+            </button>
+         </div>
+         <div class="modal-body">
+		 <?php if(!empty($list)) 
+		 {
+			 foreach($list as $key=>$row)
+			 {
+				 ?>
+            
+            <!-- <h3>Payment Gateway Integration</h3> -->
+            <div class="form-group row" >
+               <div class="col-lg-6">
+			   <div class="box">
+                  <label>Bank Name : <?php echo $row->proj_bank_name; ?></label>
+                  
+               </div>
+			   </div>
+               <div class="col-lg-6">
+			    <div class="box">
+                  <label>IFSC Code : <?php echo $row->proj_ifsc;?></label>
+                 
+				  </div>
+               </div>
+            </div>
+			 <div class="form-group row" >
+				 <div class="col-lg-6">
+					<div class="box">
+					  <label>1nd installment amount : <?php echo $row->update_project_cost_by_dist; ?></label>
+
+					  </div>
+				   </div>
+				 <div class="col-lg-6">
+				 <div class="box">
+                  <label>Account No : <?php echo $row->proj_acc_no;?></label>
+				  </div>
+				 </div>
+			 </div>
+            <div class="form-group row mt-2" >
+               <div class="col-lg-6">
+                  <label>Cheque No :</label>
+                  <input class="form-control" type="text" name="cheque_no" id="cheque_no" value="">
+               </div>
+               <div class="col-lg-6">
+				<label> Installment Amount:</label>
+				<input type="text" class="form-control" name="installment_amount" id="installment_amount" value="">
+               </div>
+            </div>
+            <div class="form-group row mt-2" >
+               <div class="col-lg-6">
+                  <label>GO Generation of bank letter:</label>
+                  <input class="form-control" type="file" name="file" id="file">
+               </div>
+
+            </div>
+      		<?php } } ?>
+         </div>
+		 <div class="col-lg-12 mt-2 p-0" id="errormsg">
+                  
+               </div>
+         <div class="col-lg-12 text-center text-msg" id="ar_msg_cont">
+                                          
+         </div>
+         <div class="modal-footer">
+            <button type="" class="btn btn-primary" id="btn_1st_pay_submit" name="btn_1st_pay_submit">Submit</button>
+         </div>
+      </form>
+      </div>
+   </div>
+</div>
+<?php $this->load->view('common/footer'); ?>
+
+<script>
+   function lfn_generate_senction_letter(id)
+      {
+//        var confirm = window.confirm("Generate Sanction Letter?");
+//        if (confirm){
+//          $("#frmAppRej input[name='application_id']").val(id);
+//          // $('#discharge_msg_cont').html('');
+//          // $('#frmDischarge')[0].reset();
+//          $('#sanctionModal').modal("show");
+//        //alert(id);
+//        }
+		$("#frmAppRej input[name='application_id']").val(id);
+         $('#sanctionModal').modal("show");
+      }
+
+      $('#btn_sanction_submit').on("click",function(event){
+		//$("#frmAppRej input[name='application_id']").val(id);
+        var form = $("#frmAppRej");
+        var formData = new FormData(form[0]);
+        var application_id = $("#frmAppRej input[name='application_id']").val();
+
+		  //alert(application_id);
+		  
+        var remarks = $("#remarks").val();
+        var fileApp = $("#frmAppRej input[name='fileApp']").val();
+
+        var error_flag= false;
+        
+        if(remarks==''){
+          $('#ar_msg_cont').show().html('Please enter remarks');
+          setTimeout(function(){$('#ar_msg_cont').hide()}, 1000);
+          error_flag= true;
+          return false;
+        }
+
+        if(fileApp==''){
+          $('#ar_msg_cont').show().html('Please upload file');
+          setTimeout(function(){$('#ar_msg_cont').hide()}, 1000);
+          return false;
+        }
+
+        if(error_flag== false)
+        {
+			formData.append('application_id', application_id);
+            $.ajax({
+                url: '<?php echo base_url() ?>admin/hq_dashboard/ajax_generate_sanction_leter',
+                type: 'POST',
+                data: formData, //{'patient_entry_id':patient_entry_id,'remarks':rmk},
+                contentType: false,
+                cache: false,
+                processData:false,
+                success: function(data) {
+                  //alert(data); return false;
+                const myArray = data.split("##");
+                $('#ar_msg_cont').show().html(myArray[1]);
+                setTimeout(function(){ $('#ar_msg_cont').html('').hide();}, 2000);
+				setTimeout(function(){ window.location.href="<?php echo base_url('admin/hq_dashboard')?>"}, 1000); 
+                //if(myArray[0]==1){
+//                setTimeout(function(){ window.location.href="<?php echo base_url('admin/hq_dashboard')?>"}, 1000);     
+//                  }
+
+                }
+            });
+          }
+      });
+
+        
+
+</script>
+
+<script>
+   function lfn_hq_1st_payment(id)
+      {
+         //alert(id);
+        var confirm = window.confirm("Are you want to release 1st payment?");
+        if (confirm){
+          $("#frmPayment input[name='application_id']").val(id);
+          // $('#discharge_msg_cont').html('');
+          // $('#frmDischarge')[0].reset();
+          $('#paymentModal').modal("show");
+        //alert(id);
+        }
+      }
+
+      $('#btn_1st_pay_submit').on("click",function(event){
+		  
+		  
+		//$("#frmPayment input[name='application_id']").val(id);
+        var form = $("#frmPayment");
+        var formData = new FormData(form[0]);
+        var application_id = $("#frmPayment input[name='application_id']").val();
+
+        //var bank_name = $("#bank_name").val();
+        //var ifsc_code = $("#ifsc_code").val();
+        var cheque_no = $("#cheque_no").val();
+        var installment_amount = $("#installment_amount").val();
+        var file = $("#file").val();
+
+
+
+        //var 1st_installment_amount = $("#hq_action").val();
+
+        //var discharge_note = $("#discharge_note").val();
+        //var fileDischarge = $("#frmDischarge input[name='fileDischarge']").val();
+
+        var error_flag= false;
+        
+        
+        if(cheque_no==''){
+          $('#errormsg').show().html('Please enter cheque no');
+          setTimeout(function(){$('#errormsg').hide()}, 1000);
+          error_flag= true;
+          return false;
+        }
+        
+
+        // if(fileDischarge==''){
+        //   $('#discharge_msg_cont').show().html('Please upload discharge file');
+        //   setTimeout(function(){$('#discharge_msg_cont').hide()}, 1000);
+        //   return false;
+        // }
+
+        if(error_flag== false)
+        {
+			formData.append('application_id', application_id);
+          //alert(123);
+            $.ajax({
+                url: '<?php echo base_url() ?>admin/hq_dashboard/ajax_submit_1st_installment_payment',
+                type: 'POST',
+                data: formData, //{'patient_entry_id':patient_entry_id,'remarks':rmk},
+                contentType: false,
+                cache: false,
+                processData:false,
+                success: function(data) {
+                  alert(data); return false;
+                const myArray = data.split("##");
+                $('#ar_msg_cont').show().html(myArray[1]);
+                setTimeout(function(){ $('#ar_msg_cont').html('').hide();}, 2000);
+                if(myArray[0]==1){
+                setTimeout(function(){ location.reload();}, 1000);  
+                window.location.href="<?php echo base_url('admin/hq_dashboard');?>";   
+                  }
+
+                }
+            });
+          }
+      });
+
+</script>
+ 

@@ -1,0 +1,1012 @@
+<?php
+
+if (!defined('BASEPATH'))
+    exit('No direct script access allowed');
+
+class District_dashboard extends Dist_Controller {
+	
+	 public function __construct() {
+        parent::__construct();
+
+        //$this->data["u_details"] = $this->admin_m->GetDetailsofUsers($this->session->userdata['uid']);
+        
+    }
+	
+    public function index() {
+	//$scheme_id = $this->uri->segment(3);
+	$district = $data['district'] = $this->data['dist_code'];
+	$param_data = array();
+		
+	if($_POST)
+	{
+		$scheme_id = $this->input->post("scheme_id");
+		$scheme_status_name = $this->input->post("scheme_status_name");
+		$scheme_status_value = $this->input->post("scheme_status_value");
+		
+		$this->form_validation->set_rules('apl_status', 'Select Status', 'required|trim');
+		
+		if($this->form_validation->run() == TRUE)
+		{
+			//$data['list'] = '';
+			//echo 123; die;
+			$status = $this->input->post("apl_status");
+			
+			if($status == 2){
+				if($scheme_id !=''){
+					$param_data = array('district'=>$district,'scheme_id'=>$scheme_id,'is_applicant_submitted'=>2);
+				}else{
+					$param_data = array('district'=>$district,'is_applicant_submitted'=>2);
+				}
+
+			}else if($status == 1){
+				if($scheme_id !=''){
+					$param_data = array('district'=>$district,'scheme_id'=>$scheme_id,'is_applicant_submitted'=>1);
+				}else{
+					$param_data = array('district'=>$district,'is_applicant_submitted'=>1);
+				}
+				
+			}else if($status == 3){
+				if($scheme_id !=''){
+					$param_data = array('district'=>$district,'scheme_id'=>$scheme_id,'is_district_app_reject_revert'=>1);
+				}else{
+					$param_data = array('district'=>$district,'is_district_app_reject_revert'=>1);
+				}
+				
+			}else if($status == 4){
+				if($scheme_id !=''){
+					$param_data = array('district'=>$district,'scheme_id'=>$scheme_id,'is_district_app_reject_revert'=>2);
+				}else{
+					$param_data = array('district'=>$district,'is_district_app_reject_revert'=>2);
+				}
+				
+			}else if($status == 5){
+				if($scheme_id !=''){
+					$param_data = array('district'=>$district,'scheme_id'=>$scheme_id,'is_district_app_reject_revert'=>3);
+				}else{
+					$param_data = array('district'=>$district,'is_district_app_reject_revert'=>3);
+				}
+				
+			}else if($status == 6){
+				if($scheme_id !=''){
+					$param_data = array('district'=>$district,'scheme_id'=>$scheme_id,'is_hq_app_reject_revert'=>1);
+				}else{
+					$param_data = array('district'=>$district,'is_hq_app_reject_revert'=>1);
+				}
+				
+			}else if($status == 7){
+				if($scheme_id !=''){
+					$param_data = array('district'=>$district,'scheme_id'=>$scheme_id,'is_hq_app_reject_revert'=>2);
+				}else{
+					$param_data = array('district'=>$district,'is_hq_app_reject_revert'=>2);
+				}
+				
+			}else if($status == 8){
+				if($scheme_id !=''){
+					$param_data = array('district'=>$district,'scheme_id'=>$scheme_id,'is_hq_app_reject_revert'=>3);
+				}else{
+					$param_data = array('district'=>$district,'is_hq_app_reject_revert'=>3);
+				}
+				
+			}else if($status == 9){
+				if($scheme_id !=''){
+					$param_data = array('district'=>$district,'scheme_id'=>$scheme_id,'is_first_sanction'=>1);
+				}else{
+					$param_data = array('district'=>$district,'is_first_sanction'=>1);
+				}
+				
+			}else if($status == 10){
+				if($scheme_id !=''){
+					$param_data = array('district'=>$district,'scheme_id'=>$scheme_id,'apply_for_1st_installment_release'=>1);
+				}else{
+					$param_data = array('district'=>$district,'apply_for_1st_installment_release'=>1);
+				}
+				
+			}else if($status == 11){
+				if($scheme_id !=''){
+					$param_data = array('district'=>$district,'scheme_id'=>$scheme_id,'is_dist_approve_1st_installment_release'=>1);
+				}else{
+					$param_data = array('district'=>$district,'is_dist_approve_1st_installment_release'=>1);
+				}
+				
+			}else if($status == 12){
+				if($scheme_id !=''){
+					$param_data = array('district'=>$district,'scheme_id'=>$scheme_id,'first_installment_released_by_HQ'=>1);
+				}else{
+					$param_data = array('district'=>$district,'first_installment_released_by_HQ'=>1);
+				}
+				
+			}else if($status == 13){
+				if($scheme_id !=''){
+					$param_data = array('district'=>$district,'scheme_id'=>$scheme_id,'apply_for_second_installment'=>1);
+				}else{
+					$param_data = array('district'=>$district,'apply_for_second_installment'=>1);
+				}
+				
+			}else if($status == 14){
+				if($scheme_id !=''){
+					$param_data = array('district'=>$district,'scheme_id'=>$scheme_id,'is_dist_approve_2nd_installment_release'=>1);
+				}else{
+					$param_data = array('district'=>$district,'is_dist_approve_2nd_installment_release'=>1);
+				}
+				
+			}else if($status == 15){
+				if($scheme_id !=''){
+					$param_data = array('district'=>$district,'scheme_id'=>$scheme_id,'second_installment_released_by_HQ'=>1);
+				}else{
+					$param_data = array('district'=>$district,'second_installment_released_by_HQ'=>1);
+				}
+				
+			}			
+			
+			//$this->data['list'] = $list = $this->admin_m->get_App_list($row, $this->data['dist_code']);
+			$this->data['list'] = $list = $this->admin_m->get_application_list($param_data);
+			
+			//echo '<pre>'; print_r($list); die();
+
+			
+		}else{
+					
+			$this->data['src_disable'] = TRUE;
+			if($scheme_id !=''){
+				$param_data = array('district'=>$district,'scheme_id'=>$scheme_id,$scheme_status_name=>$scheme_status_value);
+			}else{
+				$param_data = array('district'=>$district,$scheme_status_name=>$scheme_status_value);
+			}
+			$this->data['list'] = $list = $this->admin_m->get_application_list($param_data);
+		}
+	}else{
+		
+		$param_data = array('district'=>$district);
+		//$this->data['list'] = $list = $this->admin_m->get_App_list($row, $this->data['dist_code']);
+		$this->data['list'] = $list = $this->admin_m->get_application_list($param_data);
+		//echo '<pre>'; print_r($list); die();
+		
+
+	}
+	
+	if($list != false){
+	foreach($list as $dt){
+			if($dt->is_applicant_submitted == 2){
+				$this->data['controller'] = 'citizen_form_details/';
+			}
+			
+			if($dt->is_district_app_reject_revert == 1 || $dt->is_district_app_reject_revert == 2 ||   $dt->is_district_app_reject_revert == 3 || $dt->is_hq_app_reject_revert == 1 || $dt->is_hq_app_reject_revert == 2 || $dt->is_hq_app_reject_revert == 3 || $dt->is_dist_approve_2nd_installment_release == 1 || $dt->is_first_sanction == 1) {
+				$this->data['controller'] = 'approved_citizen_form_details/';
+			}
+			if($dt->is_applicant_submitted == 2 && $dt->is_district_app_reject_revert == 3){
+				$this->data['controller'] = 'citizen_form_details/';
+			}
+			if($dt->is_applicant_submitted == 2 && $dt->is_hq_app_reject_revert == 3){
+				$this->data['controller'] = 'citizen_form_details/';
+			}
+			if($dt->apply_for_1st_installment_release == 1 || $dt->is_dist_approve_1st_installment_release == 1 || $dt->first_installment_released_by_HQ == 1){
+				$this->data['controller'] = 'dist_1st_installment_request_by_applicant_view/';
+			}
+			if($dt->apply_for_second_installment == 1){
+				$this->data['controller'] = 'dist_second_installment_request_by_applicant_view/';
+			}
+			if($dt->second_installment_released_by_HQ == 1){
+				$this->data['controller'] = 'dist_second_installment_request_by_applicant_view/';
+			}
+		}
+	}
+	/*echo('<pre>');
+	//echo $this->data['dist_code'];
+	//print_r($param_data);
+	print_r($this->data);
+	die();*/
+		
+        $this->load->view('admin/dashboard', $this->data);
+    }
+    
+	
+	//Active Scheme List Function Start
+	public function active_scheme()
+	{
+		$data['scheme_data'] = $this->scheme_m->get_schemes();
+		$this->load->view('headquater/active_scheme_list',$data);
+	}
+	
+	/*public function hq_total_application_list()
+	{
+		$scheme_id = $this->uri->segment(4);
+		$district = $data['district'] = $this->data['dist_code'];
+		$is_applicant_submitted = '2'; //1=saved,2=submitted
+		$param_data = array('district'=>$district,'scheme_id'=>$scheme_id,'is_applicant_submitted'=>$is_applicant_submitted);
+		$data['list']=$this->scheme_m->get_application_list($param_data);
+
+		$this->load->view('headquater/hq_total_application_list',$data);
+	}
+	
+	public function dist_approved_application_list_in_hq()
+	{
+		$scheme_id = $this->uri->segment(4);
+		$district = $data['district'] = $this->data['dist_code'];
+		$is_district_app_reject_revert = '1'; //approved
+		$param_data = array('district'=>$district,'scheme_id'=>$scheme_id,'is_district_app_reject_revert'=>$is_district_app_reject_revert);
+
+		$data['list']=$this->scheme_m->get_application_list($param_data);
+		$this->load->view('headquater/dist_approved_application_list_hq',$data);
+	}
+	
+	public function dist_rejected_application_list_in_hq()
+	{
+		$scheme_id = $this->uri->segment(4);
+		//print_r($this->session->userdata('user_data')); 
+		$district = $data['district'] = $this->data['dist_code'];
+		$is_district_app_reject_revert = '2'; //rejected		
+		$param_data = array('district'=>$district,'scheme_id'=>$scheme_id,'is_district_app_reject_revert'=>$is_district_app_reject_revert);
+		
+		$data['list']=$this->scheme_m->get_application_list($param_data);
+		$this->load->view('headquater/dist_rejected_application_list_hq',$data);
+	}
+	
+	public function dist_updated_application_list_in_hq()
+	{
+		$scheme_id = $this->uri->segment(4);
+		$district = $data['district'] = $this->data['dist_code'];
+		$is_project_cost_updated_dist = '1'; //rejected
+		$is_first_sanction  = '1'; //rejected
+		
+		$param_data = array('district'=>$district,'scheme_id'=>$scheme_id,'is_first_sanction'=>$is_first_sanction,'is_project_cost_updated_dist'=>$is_project_cost_updated_dist);
+		
+		$data['list']=$this->scheme_m->get_application_list($param_data);
+		$this->load->view('headquater/dist_updated_application_list_hq',$data);
+	}*/
+	
+	//Active Scheme Function End
+	
+	public function citizen_form_details()
+	{
+		
+		$application_id =$this->data['application_id']= $this->uri->segment('4'); //application_id
+		$District_dashboard = 'admin/district_dashboard';
+		$proj_dist = $this->db->where("application_id",$application_id)->get("application_master")->row()->proj_district;
+		
+		if($proj_dist != $this->data['dist_code']){
+			redirect($District_dashboard);
+		}
+
+		$this->data['app_data'] = $this->admin_m->get_application_master_data($application_id);
+		$this->data['industry_data']=$this->admin_m->get_industry_master_data('',$application_id);
+		$this->data['pm_data']=$this->admin_m->get_plant_machinary_data($application_id);
+		$this->data['document_upload_master_data'] = $this->admin_m->get_document_upload_master_data();
+		$this->data['remarks'] = $this->admin_m->get_remarks_data($application_id);
+		//$this->data['document']=$this->admin_m->document_list($application_id);
+		
+		/*echo('<pre>');
+		print_r($this->data);
+		die();*/
+
+		if(!empty($_POST))
+        {
+        	/*echo "<pre>";
+        	print_r($_POST); die();*/
+        	if(!empty($_POST['annexure1']) && $_POST["annexure1"] !='')
+            {
+                $chk_data = $this->db->query("SELECT * FROM document_master WHERE file_application_id='$application_id' AND file_document_ms='1'");
+                $district_remarks1 = $_POST['annexure1'];
+              
+	              if($chk_data->num_rows()==0)
+	              {
+	                $query = $this->db->query("INSERT INTO document_master(file_application_id,file_document_ms,district_remarks) VALUES('$application_id','1','$district_remarks1')");
+	              }else{
+	                $query = $this->db->query("UPDATE document_master SET district_remarks ='$district_remarks1' WHERE file_application_id='$application_id' AND file_document_ms='1' ");
+	              }
+
+             }
+
+            if(!empty($_POST['dpr']) && $_POST["dpr"] !='')
+            {
+                $chk_data = $this->db->query("SELECT * FROM document_master WHERE file_application_id='$application_id' AND file_document_ms='2'");
+                $district_remarks2 = $_POST['dpr'];
+              
+	              if($chk_data->num_rows()==0)
+	              {
+	                $query = $this->db->query("INSERT INTO document_master(file_application_id,file_document_ms,district_remarks) VALUES('$application_id','2','$district_remarks2')");
+	              }else{
+	                $query = $this->db->query("UPDATE document_master SET district_remarks ='$district_remarks2' WHERE file_application_id='$application_id' AND file_document_ms='2' ");
+	              }
+
+             }
+             
+             if(!empty($_POST['sanction_letter_of_term_loan']) && $_POST["sanction_letter_of_term_loan"] !='')
+            {
+                $chk_data = $this->db->query("SELECT * FROM document_master WHERE file_application_id='$application_id' AND file_document_ms='3'");
+                $district_remarks3 = $_POST['sanction_letter_of_term_loan'];
+              
+	              if($chk_data->num_rows()==0)
+	              {
+	                $query = $this->db->query("INSERT INTO document_master(file_application_id,file_document_ms,district_remarks) VALUES('$application_id','3','$district_remarks3')");
+	              }else{
+	                $query = $this->db->query("UPDATE document_master SET district_remarks ='$district_remarks3' WHERE file_application_id='$application_id' AND file_document_ms='3' ");
+	              }
+
+             }
+    		if(!empty($_POST['appraisal_report']) && $_POST["appraisal_report"] !='')
+            {
+                $chk_data = $this->db->query("SELECT * FROM document_master WHERE file_application_id='$application_id' AND file_document_ms='4'");
+                $district_remarks4 = $_POST['appraisal_report'];
+              
+	              if($chk_data->num_rows()==0)
+	              {
+	                $query = $this->db->query("INSERT INTO document_master(file_application_id,file_document_ms,district_remarks) VALUES('$application_id','4','$district_remarks4')");
+	              }else{
+	                $query = $this->db->query("UPDATE document_master SET district_remarks ='$district_remarks4' WHERE file_application_id='$application_id' AND file_document_ms='4' ");
+	              }
+
+             }
+
+             if(!empty($_POST['certificate_of_incorporation']) && $_POST["certificate_of_incorporation"] !='')
+            {
+                $chk_data = $this->db->query("SELECT * FROM document_master WHERE file_application_id='$application_id' AND file_document_ms='5'");
+                $district_remarks5 = $_POST['certificate_of_incorporation'];
+              
+	              if($chk_data->num_rows()==0)
+	              {
+	                $query = $this->db->query("INSERT INTO document_master(file_application_id,file_document_ms,district_remarks) VALUES('$application_id','5','$district_remarks5')");
+	              }else{
+	                $query = $this->db->query("UPDATE document_master SET district_remarks ='$district_remarks5' WHERE file_application_id='$application_id' AND file_document_ms='5' ");
+	              }
+
+             }
+             if(!empty($_POST['memorandum_of_association']) && $_POST["memorandum_of_association"] !='')
+            {
+                $chk_data = $this->db->query("SELECT * FROM document_master WHERE file_application_id='$application_id' AND file_document_ms='6'");
+                $district_remarks6 = $_POST['memorandum_of_association'];
+              
+	              if($chk_data->num_rows()==0)
+	              {
+	                $query = $this->db->query("INSERT INTO document_master(file_application_id,file_document_ms,district_remarks) VALUES('$application_id','6','$district_remarks6')");
+	              }else{
+	                $query = $this->db->query("UPDATE document_master SET district_remarks ='$district_remarks6' WHERE file_application_id='$application_id' AND file_document_ms='6' ");
+	              }
+
+             }
+         	 if(!empty($_POST['partnership_deed']) && $_POST["partnership_deed"] !='')
+            {
+                $chk_data = $this->db->query("SELECT * FROM document_master WHERE file_application_id='$application_id' AND file_document_ms='7'");
+                $district_remarks7 = $_POST['partnership_deed'];
+              
+	              if($chk_data->num_rows()==0)
+	              {
+	                $query = $this->db->query("INSERT INTO document_master(file_application_id,file_document_ms,district_remarks) VALUES('$application_id','7','$district_remarks7')");
+	              }else{
+	                $query = $this->db->query("UPDATE document_master SET district_remarks ='$district_remarks7' WHERE file_application_id='$application_id' AND file_document_ms='7' ");
+	              }
+
+             }
+             if(!empty($_POST['bio_data']) && $_POST["bio_data"] !='')
+            {
+                $chk_data = $this->db->query("SELECT * FROM document_master WHERE file_application_id='$application_id' AND file_document_ms='8'");
+                $district_remarks8 = $_POST['bio_data'];
+              
+	              if($chk_data->num_rows()==0)
+	              {
+	                $query = $this->db->query("INSERT INTO document_master(file_application_id,file_document_ms,district_remarks) VALUES('$application_id','8','$district_remarks8')");
+	              }else{
+	                $query = $this->db->query("UPDATE document_master SET district_remarks ='$district_remarks8' WHERE file_application_id='$application_id' AND file_document_ms='8' ");
+	              }
+
+             }
+
+              if(!empty($_POST['annual_reports_audited_statement']) && $_POST["annual_reports_audited_statement"] !='')
+            {
+                $chk_data = $this->db->query("SELECT * FROM document_master WHERE file_application_id='$application_id' AND file_document_ms='9'");
+                $district_remarks9 = $_POST['annual_reports_audited_statement'];
+              
+	              if($chk_data->num_rows()==0)
+	              {
+	                $query = $this->db->query("INSERT INTO document_master(file_application_id,file_document_ms,district_remarks) VALUES('$application_id','9','$district_remarks9')");
+	              }else{
+	                $query = $this->db->query("UPDATE document_master SET district_remarks ='$district_remarks9' WHERE file_application_id='$application_id' AND file_document_ms='9' ");
+	              }
+
+             }
+             if(!empty($_POST['land_porcha']) && $_POST["land_porcha"] !='')
+            {
+                $chk_data = $this->db->query("SELECT * FROM document_master WHERE file_application_id='$application_id' AND file_document_ms='10'");
+                $district_remarks10 = $_POST['land_porcha'];
+              
+	              if($chk_data->num_rows()==0)
+	              {
+	                $query = $this->db->query("INSERT INTO document_master(file_application_id,file_document_ms,district_remarks) VALUES('$application_id','10','$district_remarks10')");
+	              }else{
+	                $query = $this->db->query("UPDATE document_master SET district_remarks ='$district_remarks10' WHERE file_application_id='$application_id' AND file_document_ms='10' ");
+	              }
+
+             }
+
+             if(!empty($_POST['blueprint_building_plan']) && $_POST["blueprint_building_plan"] !='')
+            {
+                $chk_data = $this->db->query("SELECT * FROM document_master WHERE file_application_id='$application_id' AND file_document_ms='11'");
+                $district_remarks11 = $_POST['blueprint_building_plan'];
+              
+	              if($chk_data->num_rows()==0)
+	              {
+	                $query = $this->db->query("INSERT INTO document_master(file_application_id,file_document_ms,district_remarks) VALUES('$application_id','11','$district_remarks11')");
+	              }else{
+	                $query = $this->db->query("UPDATE document_master SET district_remarks ='$district_remarks11' WHERE file_application_id='$application_id' AND file_document_ms='11' ");
+	              }
+
+             }
+
+             if(!empty($_POST['trade_licence']) && $_POST["trade_licence"] !='')
+            {
+                $chk_data = $this->db->query("SELECT * FROM document_master WHERE file_application_id='$application_id' AND file_document_ms='12'");
+                $district_remarks12 = $_POST['trade_licence'];
+              
+	              if($chk_data->num_rows()==0)
+	              {
+	                $query = $this->db->query("INSERT INTO document_master(file_application_id,file_document_ms,district_remarks) VALUES('$application_id','12','$district_remarks12')");
+	              }else{
+	                $query = $this->db->query("UPDATE document_master SET district_remarks ='$district_remarks12' WHERE file_application_id='$application_id' AND file_document_ms='12' ");
+	              }
+
+             }
+
+             if(!empty($_POST['land_deed']) && $_POST["land_deed"] !='')
+            {
+                $chk_data = $this->db->query("SELECT * FROM document_master WHERE file_application_id='$application_id' AND file_document_ms='13'");
+                $district_remarks13 = $_POST['land_deed'];
+              
+	              if($chk_data->num_rows()==0)
+	              {
+	                $query = $this->db->query("INSERT INTO document_master(file_application_id,file_document_ms,district_remarks) VALUES('$application_id','13','$district_remarks13')");
+	              }else{
+	                $query = $this->db->query("UPDATE document_master SET district_remarks ='$district_remarks13' WHERE file_application_id='$application_id' AND file_document_ms='13' ");
+	              }
+
+             }
+
+             if(!empty($_POST['certificate_of_item']) && $_POST["certificate_of_item"] !='')
+            {
+                $chk_data = $this->db->query("SELECT * FROM document_master WHERE file_application_id='$application_id' AND file_document_ms='14'");
+                $district_remarks14 = $_POST['certificate_of_item'];
+              
+	              if($chk_data->num_rows()==0)
+	              {
+	                $query = $this->db->query("INSERT INTO document_master(file_application_id,file_document_ms,district_remarks) VALUES('$application_id','14','$district_remarks14')");
+	              }else{
+	                $query = $this->db->query("UPDATE document_master SET district_remarks ='$district_remarks14' WHERE file_application_id='$application_id' AND file_document_ms='14' ");
+	              }
+
+             }
+
+             if(!empty($_POST['chartered_engineer']) && $_POST["chartered_engineer"] !='')
+            {
+                $chk_data = $this->db->query("SELECT * FROM document_master WHERE file_application_id='$application_id' AND file_document_ms='15'");
+                $district_remarks15 = $_POST['chartered_engineer'];
+              
+	              if($chk_data->num_rows()==0)
+	              {
+	                $query = $this->db->query("INSERT INTO document_master(file_application_id,file_document_ms,district_remarks) VALUES('$application_id','15','$district_remarks15')");
+	              }else{
+	                $query = $this->db->query("UPDATE document_master SET district_remarks ='$district_remarks15' WHERE file_application_id='$application_id' AND file_document_ms='15' ");
+	              }
+
+             }
+             if(!empty($_POST['quotations_of_prices']) && $_POST["quotations_of_prices"] !='')
+            {
+                $chk_data = $this->db->query("SELECT * FROM document_master WHERE file_application_id='$application_id' AND file_document_ms='16'");
+                $district_remarks16 = $_POST['quotations_of_prices'];
+              
+	              if($chk_data->num_rows()==0)
+	              {
+	                $query = $this->db->query("INSERT INTO document_master(file_application_id,file_document_ms,district_remarks) VALUES('$application_id','16','$district_remarks16')");
+	              }else{
+	                $query = $this->db->query("UPDATE document_master SET district_remarks ='$district_remarks16' WHERE file_application_id='$application_id' AND file_document_ms='16' ");
+	              }
+
+             }
+
+             if(!empty($_POST['marketing_strategy']) && $_POST["marketing_strategy"] !='')
+            {
+                $chk_data = $this->db->query("SELECT * FROM document_master WHERE file_application_id='$application_id' AND file_document_ms='17'");
+                $district_remarks17 = $_POST['marketing_strategy'];
+              
+	              if($chk_data->num_rows()==0)
+	              {
+	                $query = $this->db->query("INSERT INTO document_master(file_application_id,file_document_ms,district_remarks) VALUES('$application_id','17','$district_remarks17')");
+	              }else{
+	                $query = $this->db->query("UPDATE document_master SET district_remarks ='$district_remarks17' WHERE file_application_id='$application_id' AND file_document_ms='17' ");
+	              }
+
+             }
+
+             if(!empty($_POST['process_flow_diagram']) && $_POST["process_flow_diagram"] !='')
+            {
+                $chk_data = $this->db->query("SELECT * FROM document_master WHERE file_application_id='$application_id' AND file_document_ms='18'");
+                $district_remarks18 = $_POST['process_flow_diagram'];
+              
+	              if($chk_data->num_rows()==0)
+	              {
+	                $query = $this->db->query("INSERT INTO document_master(file_application_id,file_document_ms,district_remarks) VALUES('$application_id','18','$district_remarks18')");
+	              }else{
+	                $query = $this->db->query("UPDATE document_master SET district_remarks ='$district_remarks18' WHERE file_application_id='$application_id' AND file_document_ms='18' ");
+	              }
+
+             }
+             if(!empty($_POST['implementation_schedule']) && $_POST["implementation_schedule"] !='')
+            {
+                $chk_data = $this->db->query("SELECT * FROM document_master WHERE file_application_id='$application_id' AND file_document_ms='19'");
+                $district_remarks19 = $_POST['implementation_schedule'];
+              
+	              if($chk_data->num_rows()==0)
+	              {
+
+	                $query = $this->db->query("INSERT INTO document_master(file_application_id,file_document_ms,district_remarks) VALUES('$application_id','19','$district_remarks19')");
+	              }else{
+	                $query = $this->db->query("UPDATE document_master SET district_remarks ='$district_remarks19' WHERE file_application_id='$application_id' AND file_document_ms='19' ");
+	              }
+
+             }
+             if(!empty($_POST['submitted_affidavit']) && $_POST["submitted_affidavit"] !='')
+            {
+                $chk_data = $this->db->query("SELECT * FROM document_master WHERE file_application_id='$application_id' AND file_document_ms='20'");
+                $district_remarks20 = $_POST['submitted_affidavit'];
+              
+	              if($chk_data->num_rows()==0)
+	              {
+	                $query = $this->db->query("INSERT INTO document_master(file_application_id,file_document_ms,district_remarks) VALUES('$application_id','20','$district_remarks20')");
+	              }else{
+	                $query = $this->db->query("UPDATE document_master SET district_remarks ='$district_remarks20' WHERE file_application_id='$application_id' AND file_document_ms='20' ");
+	              }
+
+             }
+             if(!empty($_POST['submitted_bank_certificate']) && $_POST["submitted_bank_certificate"] !='')
+            {
+                $chk_data = $this->db->query("SELECT * FROM document_master WHERE file_application_id='$application_id' AND file_document_ms='21'");
+                $district_remarks21 = $_POST['submitted_bank_certificate'];
+              
+	              if($chk_data->num_rows()==0)
+	              {
+	                $query = $this->db->query("INSERT INTO document_master(file_application_id,file_document_ms,district_remarks) VALUES('$application_id','21','$district_remarks21')");
+	              }else{
+	                $query = $this->db->query("UPDATE document_master SET district_remarks ='$district_remarks21' WHERE file_application_id='$application_id' AND file_document_ms='21' ");
+	              }
+
+             }
+
+        }
+			
+		$this->load->view('district/dist_citizen_form_details',$this->data);
+		//$this->load->view('pages/application_form_details',$data);
+	}
+	
+	
+	
+	public function submit_approve_reject_revert()
+	{
+		/*print_r($_POST);
+		print_r($_FILES); die();*/
+		
+		
+
+		$h_action = $this->input->post('h_action');
+		$application_id = $this->input->post('h_application_id');
+		$user_id = $this->district_m->get_user_id_by_application_id($application_id);
+		//echo $user_id;
+		//die();
+		$remarks = $this->input->post('remarks');
+		$app_remarks = $this->input->post('app_remarks');
+		$dist_approval = $this->input->post('dist_approval');
+
+		$datetime = date('Y-m-d H:i:s');
+
+		$path = 'uploads/process_attachment/';
+
+		if($_FILES['fileAction']['tmp_name']!=''){
+			
+			$fileAction_name = $_FILES['fileAction']['name'];
+			$fileAction_tmp_name = $_FILES['fileAction']['tmp_name'];
+
+			$time = time();
+			$upload_file = $path.$time.'_'.$fileAction_name;
+
+			move_uploaded_file($fileAction_tmp_name, $upload_file);
+		}
+		
+		
+		if($_FILES['fileActionApp']['tmp_name']!=''){
+			
+			$fileAction_name = $_FILES['fileActionApp']['name'];
+			$fileAction_tmp_name = $_FILES['fileActionApp']['tmp_name'];
+
+			$time = time();
+			$upload_file = $path.$time.'_'.$fileAction_name;
+
+			move_uploaded_file($fileAction_tmp_name, $upload_file);
+		}
+		
+
+		if($h_action ==3){
+			$data = array(
+				'is_applicant_submitted'=>'1',
+				'proj_step1_submit'=>0,
+				'proj_step2_submit'=>0,
+				'proj_step3_submit'=>0,
+				'proj_step4_submit'=>0,
+				'is_district_app_reject_revert'=>$h_action,
+				'dist_remarks'=>$remarks
+			);
+		}else if($h_action ==2){
+			$data = array(
+				'is_applicant_submitted'=>'0',
+				'is_district_app_reject_revert'=>$h_action,
+				'dist_remarks'=>$remarks
+			);
+		}else{
+			$data = array(
+				'is_applicant_submitted'=>'0',
+				'is_district_app_reject_revert'=>$h_action,
+				'dist_approval_amount'=>$dist_approval,
+				'dist_remarks'=>$app_remarks
+			);
+		}
+		
+		/*echo("<pre>");
+		print_r($data);
+		die();*/
+
+		$res1 = $this->district_m->update_application_master($application_id,$data);
+
+		
+		if($h_action ==3){
+			$data_remarks = array(
+				'application_id'=>$application_id,
+				'user_id'=>$user_id,
+				'remarks'=>$remarks,
+				'remark_stat'=>11,
+				'add_datetime'=>$datetime
+			);
+		}else if($h_action ==2){
+			$data_remarks = array(
+				'application_id'=>$application_id,
+				'user_id'=>$user_id,
+				'remarks'=>$remarks,
+				'remark_stat'=>10,
+				'add_datetime'=>$datetime
+			);
+		}else{
+			$data_remarks = array(
+				'application_id'=>$application_id,
+				'user_id'=>$user_id,
+				'remarks'=>$app_remarks,
+				'remark_stat'=>9,
+				'add_datetime'=>$datetime
+			);
+		}
+
+		$remark_id = $this->district_m->add_remarks($data_remarks);
+
+		
+		if($_FILES['fileAction']['tmp_name']!='' || $_FILES['fileActionApp']['tmp_name']!=''){
+			$all_remarks_attachment_data = array(
+				'remark_id'=>$remark_id,
+				'application_id'=>$application_id,
+				'fileAttachment'=>$upload_file,
+				'user_id'=>$user_id,
+				'date_time'=>$datetime
+			);
+			$res2 = $this->district_m->add_remarks_attachment($all_remarks_attachment_data);
+		}
+
+		if($res1==true)
+		{
+			if($h_action==1)
+			{
+				$msg = "1##Application approved successfully";
+			}elseif($h_action==2){
+				$msg = "2##Application rejected successfully";
+			}elseif($h_action==3){
+				$msg = "3##Application reverted successfully";
+			}
+			
+		}else{
+			$msg = "4##Opps! some problem arrises, try again later";
+		}
+
+		echo $msg;
+
+	}
+	public function approved_citizen_form_details()
+	{
+
+		$application_id =$this->data['application_id']= $this->uri->segment('4'); //application_id
+		$District_dashboard = 'admin/district_dashboard';
+		$proj_dist = $this->db->where("application_id",$application_id)->get("application_master")->row()->proj_district;
+		
+		if($proj_dist != $this->data['dist_code']){
+			redirect($District_dashboard);
+		}
+
+		$this->data['app_data'] = $this->admin_m->get_application_master_data($application_id);
+		$this->data['industry_data']=$this->admin_m->get_industry_master_data('',$application_id);
+		$this->data['pm_data']=$this->admin_m->get_plant_machinary_data($application_id);
+		$this->data['document_upload_master_data'] = $this->admin_m->get_document_upload_master_data();
+		$this->data['remarks'] = $this->admin_m->get_remarks_data($application_id);
+		//echo('<pre>'); print_r($this->data); die();
+
+	
+		/*echo "<pre>";
+        	print_r($this->data); die();*/
+			
+		$this->load->view('admin/common_citizen_form_details_view',$this->data);
+		//$this->load->view('pages/application_form_details',$data);
+	}
+	public function dist_1st_installment_request_by_applicant_view()
+	{
+		$application_id =$this->data['application_id']= $this->uri->segment('4'); //application_id
+		$District_dashboard = 'admin/district_dashboard';
+		$proj_dist = $this->db->where("application_id",$application_id)->get("application_master")->row()->proj_district;
+		
+		if($proj_dist != $this->data['dist_code']){
+			redirect($District_dashboard);
+		}
+
+		$this->data['app_data'] = $this->admin_m->get_application_master_data($application_id);
+		$this->data['industry_data']=$this->admin_m->get_industry_master_data('',$application_id);
+		$this->data['pm_data']=$this->admin_m->get_plant_machinary_data($application_id);
+		$this->data['document_upload_master_data'] = $this->admin_m->get_document_upload_master_data();
+		$this->data['remarks'] = $this->admin_m->get_remarks_data($application_id);
+		// print_r($data['document']);
+
+
+			
+		$this->load->view('district/dist_1st_installment_request_by_applicant_view',$this->data);
+	}
+	public function submit_approve_1st_installment_request_by_applicant()
+	{
+
+		//print_r($_POST);
+		//print_r($_FILES); die();
+
+		
+		//print_r($user_id);die(); 
+
+		$h_action = $this->input->post('h_action');
+		$application_id = $this->input->post('h_application_id');
+		$user_id = $this->district_m->get_user_id_by_application_id($application_id);
+		$remarks = $this->input->post('remarks');
+		$app_remarks = $this->input->post('app_remarks');
+		$update_project_cost_by_dist = $this->input->post('dist_1st_release_approval');
+
+		$datetime = date('Y-m-d H:i:s');
+
+		$path = 'uploads/process_attachment/';
+
+		if($_FILES['fileAction']['tmp_name']!=''){
+			
+			$fileAction_name = $_FILES['fileAction']['name'];
+			$fileAction_tmp_name = $_FILES['fileAction']['tmp_name'];
+
+			$time = time();
+			$upload_file = $path.$time.'_'.$fileAction_name;
+
+			move_uploaded_file($fileAction_tmp_name, $upload_file);
+		}
+		
+		if($_FILES['fileActionApp']['tmp_name']!=''){
+			
+			$fileAction_name = $_FILES['fileActionApp']['name'];
+			$fileAction_tmp_name = $_FILES['fileActionApp']['tmp_name'];
+
+			$time = time();
+			$upload_file = $path.$time.'_'.$fileAction_name;
+
+			move_uploaded_file($fileAction_tmp_name, $upload_file);
+		}
+
+		
+		if($h_action ==3){
+			$data = array(
+				'is_first_sanction'=>1,
+				'apply_for_1st_installment_release'=>0,
+				'is_dist_approve_1st_installment_release'=>$h_action,
+				'is_dist_approve_1st_installment_remarks'=>$remarks
+			);
+		}else if($h_action ==2){
+			$data = array(
+				'apply_for_1st_installment_release'=>0,
+				'is_dist_approve_1st_installment_release'=>$h_action,
+				'is_dist_approve_1st_installment_remarks'=>$remarks
+			);
+		}else{
+			$data = array(
+				'is_dist_approve_1st_installment_release'=>$h_action,
+				'is_dist_approve_1st_installment_remarks'=>$app_remarks,
+				'is_dist_approve_1st_installment_datetime'=>$datetime,
+				'apply_for_1st_installment_release'=>'0',
+				'update_project_cost_by_dist'=>$update_project_cost_by_dist
+			);
+		}
+		
+
+		$res1 = $this->district_m->update_application_master($application_id,$data);
+
+		$data_remarks = array(
+			'application_id'=>$application_id,
+			'user_id'=>$user_id,
+			'add_datetime'=>$datetime
+		);
+		if($h_action ==3){
+			$data_remarks['remarks']=$remarks;
+			$data_remarks['remark_stat']=19;
+		}elseif($h_action ==2){
+			$data_remarks['remarks']=$remarks;
+			$data_remarks['remark_stat']=18;
+		}elseif($h_action ==1){
+			$data_remarks['remarks']=$app_remarks;
+			$data_remarks['remark_stat']=17;
+		}
+		
+		$remark_id = $this->district_m->add_remarks($data_remarks);
+
+		
+		if($_FILES['fileAction']['tmp_name']!=''){
+			$all_remarks_attachment_data = array(
+				'remark_id'=>$remark_id,
+				'application_id'=>$application_id,
+				'fileAttachment'=>$fileAction_name,
+				'user_id'=>$user_id,
+				'date_time'=>$datetime
+			);
+			$res2 = $this->district_m->add_remarks_attachment($all_remarks_attachment_data);
+		}
+
+		if($res1==true)
+		{
+			if($h_action==1)
+			{
+				$msg = "1## 1st installment request by applicant approved successfully";
+			}elseif($h_action==2){
+				$msg = "2## 1st installment request by applicant rejected successfully";
+			}elseif($h_action==3){
+				$msg = "3## 1st installment request by applicant reverted successfully";
+			}
+			
+		}else{
+			$msg = "4##Opps! some problem arrises, try again later";
+		}
+
+		echo $msg;
+
+	}
+	public function dist_second_installment_request_by_applicant_view()
+	{
+		$application_id =$this->data['application_id']= $this->uri->segment('4'); //application_id
+		$District_dashboard = 'admin/district_dashboard';
+		$proj_dist = $this->db->where("application_id",$application_id)->get("application_master")->row()->proj_district;
+		
+		if($proj_dist != $this->data['dist_code']){
+			redirect($District_dashboard);
+		}
+
+		$this->data['app_data'] = $app_data= $this->admin_m->get_application_master_data($application_id);
+		//echo '<pre>'; print_r($this->data['app_data']);die();
+		$this->data['industry_data']=$this->admin_m->get_industry_master_data('',$application_id);
+		$this->data['pm_data']=$this->admin_m->get_plant_machinary_data($application_id);
+		$this->data['document_upload_master_data'] = $this->admin_m->get_document_upload_master_data();
+		$this->data['remarks'] = $this->admin_m->get_remarks_data($application_id);
+		// print_r($data['document']);
+
+		
+		$this->load->view('district/dist_2nd_installment_request_by_applicant_view',$this->data);
+	}
+	public function submit_approve_second_installment_request_by_applicant()
+	{
+		/*print_r($_POST);
+		print_r($_FILES); die();*/
+
+		$user_id = $this->district_m->get_user_id_by_application_id($application_id); 
+
+		$h_action = $this->input->post('h_action');
+		$application_id = $this->input->post('h_application_id');
+		$remarks = $this->input->post('remarks');
+		$app_remarks = $this->input->post('app_remarks');
+		$dist_2nd_release_approval = $this->input->post('dist_2nd_release_approval');
+
+		$datetime = date('Y-m-d H:i:s');
+
+		$path = 'uploads/process_attachment/';
+
+		if($_FILES['fileAction']['tmp_name']!=''){
+			
+			$fileAction_name = $_FILES['fileAction']['name'];
+			$fileAction_tmp_name = $_FILES['fileAction']['tmp_name'];
+
+			$time = time();
+			$upload_file = $path.$time.'_'.$fileAction_name;
+
+			move_uploaded_file($fileAction_tmp_name, $upload_file);
+		}
+		
+		if($_FILES['fileActionApp']['tmp_name']!=''){
+			
+			$fileAction_name = $_FILES['fileActionApp']['name'];
+			$fileAction_tmp_name = $_FILES['fileActionApp']['tmp_name'];
+
+			$time = time();
+			$upload_file = $path.$time.'_'.$fileAction_name;
+
+			move_uploaded_file($fileAction_tmp_name, $upload_file);
+		}
+
+		
+		if($h_action ==3){
+			$data = array(
+				'apply_for_second_installment'=>0,
+				'first_installment_released_by_HQ'=>1,
+				'is_dist_approve_2nd_installment_release'=>$h_action,
+				'is_dist_approve_2nd_installment_remarks'=>$remarks
+			);
+		}else if($h_action ==2){
+			$data = array(
+				'apply_for_second_installment'=>0,
+				'is_dist_approve_2nd_installment_release'=>$h_action,
+				'is_dist_approve_2nd_installment_remarks'=>$remarks
+			);
+		}else{
+			$data = array(
+				'apply_for_second_installment'=>0,
+				'is_dist_approve_2nd_installment_release'=>$h_action,
+				'is_dist_approve_2nd_installment_remarks'=>$app_remarks,
+				'is_dist_approve_2nd_installment_datetime'=>$datetime,
+				'dist_second_installment_amount'=>$dist_2nd_release_approval
+			);
+		}
+		
+
+		$res1 = $this->district_m->update_application_master($application_id,$data);
+
+		$data_remarks = array(
+			'application_id'=>$application_id,
+			'user_id'=>$user_id,
+			'add_datetime'=>$datetime
+		);
+		if($h_action ==3){
+			$data_remarks['remarks']=$remarks;
+			$data_remarks['remark_stat']=23;
+		}elseif($h_action ==2){
+			$data_remarks['remarks']=$remarks;
+			$data_remarks['remark_stat']=22;
+		}elseif($h_action ==1){
+			$data_remarks['remarks']=$app_remarks;
+			$data_remarks['remark_stat']=21;
+		}
+
+		$remark_id = $this->district_m->add_remarks($data_remarks);
+
+		
+		if($_FILES['fileAction']['tmp_name']!=''){
+			$all_remarks_attachment_data = array(
+				'remark_id'=>$remark_id,
+				'application_id'=>$application_id,
+				'fileAttachment'=>$upload_file,
+				'user_id'=>$user_id,
+				'date_time'=>$datetime
+			);
+			$res2 = $this->district_m->add_remarks_attachment($all_remarks_attachment_data);
+		}
+
+		if($res1==true)
+		{
+			if($h_action==1)
+			{
+				$msg = "1## 2nd installment approved successfully by district";
+			}elseif($h_action==2){
+				$msg = "2## 2nd installment approval rejected by district";
+			}elseif($h_action==3){
+				$msg = "3## 2nd installment approval reverted by district";
+			}
+			
+		}else{
+			$msg = "4##Opps! some problem arrises, try again later";
+		}
+
+		echo $msg;
+
+	}
+
+}

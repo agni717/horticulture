@@ -1,0 +1,456 @@
+<?php $this->load->view('common/header_citizen.php'); 
+/*echo '<pre>';
+print_r($document_master);*/
+?>  
+<style>
+  .required:after {
+    content:" *";
+    color: red;
+  }
+</style> 
+<style type="text/css">
+   .text-error{color: #f05555;}
+   #file-error{color: #f05555;}
+</style>
+      <div class="page-body-wrapper">
+         <div class="container-fluid">
+            <div class="row">
+               <div class="col-lg-12 grid-margin mt-4 mx-auto">
+                  <h4 class="card-title">List of Documents</h4>
+               </div>
+            </div>
+            <?php
+            $attributes = array('name' => 'frmDoc', 'id' => 'frmDoc','enctype'=>'multipart/form-data'); 
+            echo form_open('',$attributes);?>
+            <div class="row">
+               <div class="col-lg-12 grid-margin">
+                  <div class="card">
+                     <div class="row">
+                        <div class="col-lg-12 text-center text-success msg_cont2" >
+                           <?php
+                              if(!empty($this->session->flashdata('msg4')))
+                              {
+                                 echo $this->session->flashdata('msg4');
+                              }
+                              if(!empty($this->session->flashdata('msg5')))
+                              {
+                                 echo $this->session->flashdata('msg5');
+                                 //echo '<script>setTimeout(function(){window.location.href="'.base_url().'User_details/application_no_popup";}, 4000);</script>';
+                              }
+                           ?>
+                        </div>
+                     </div>                           
+                     <div class="card-body">
+                        <fieldset>
+                           <legend>Document Details</legend>
+                           <table class="table table-bordered">
+                              <thead>
+                                 <tr>
+                                   <th rowspan="2">Sl. No.</th>
+                                   <th rowspan="2">Document Description</th>
+                                   <th colspan="2">Whether Submitted</th>
+                                   <th rowspan="2">Upload Document</th>
+                                   <?php if($applicant_essential_data->is_district_app_reject_revert==3){echo '<th rowspan="2">Remarks</th>';}?>
+                                 </tr>
+                                 <tr>                                
+                                   <th>Yes</th>
+                                   <th>No</th>
+                                 </tr>
+                              </thead>
+                              <tbody>
+
+                                 <?php 
+                                 if(!empty($document_upload_master_data))
+                                 {
+                                    $sl_no = 1;
+                                    $col_span = 0;
+                                    $temp_id = '';
+                                    foreach ($document_upload_master_data as $row) 
+                                    {
+                                       if($row->doc_id==5)
+                                       {
+                                          $col_span=3;
+                                       }elseif($row->doc_id==17){
+                                          $col_span=2;
+                                       }elseif($row->doc_id==6){
+                                          $sl_no=6;
+                                       }elseif($row->doc_id==18){
+                                          $sl_no=16;
+                                       }
+                                       
+                                       /* mandatory field set */
+                                          $mandatoryDocIdArr = array(1, 2, 3, 8, 13, 14, 16, 17);
+                                          $mandatory_class = '';
+                                          $docId = $row->doc_id;
+                                          if(in_array($docId, $mandatoryDocIdArr)){
+                                             $mandatory_class = 'class="required"';
+                                          }
+                                       /* mandatory field set end*/
+
+                                       if($row->parent_id ==0)
+                                       { ?>
+                                          <tr>
+
+                                             <?php
+                                                $img1 = $district_remarks = '';
+                                                $img1_style = 'style="display:none"';
+                                                
+                                                foreach($document_upload_set as $up_docs){
+                                                   if($row->doc_id == $up_docs->doc_id){
+                                                      $img1 = $up_docs->file_name;
+                                                      $district_remarks = $up_docs->district_remarks;
+                                                      break;
+                                                   }
+                                                }
+                                             ?>
+                                             <td><?php echo $sl_no;?></td>
+                                             <td <?php echo $mandatory_class?>><?php echo $row->doc_label?></td>
+                                             <td>
+                                                <input type="radio"  name="is_submitted_<?php echo $row->doc_file_name?>" onclick="lfn_ShowInputFile(this.value,'<?php echo $row->doc_file_name?>');" value="Yes" <?php if($img1 !=''){ echo 'checked';}?>>
+                                             </td>
+                                             <td>
+                                                <input type="radio" name="is_submitted_<?php echo $row->doc_file_name?>" onclick="lfn_ShowInputFile(this.value,'<?php echo $row->doc_file_name?>');" value="No" <?php if($img1=='' || $img1==NULL){ echo 'checked';}?>>
+                                             </td>
+                                             <td>
+                                                <?php 
+                                                if($img1 !=''){$img1_style = 'style="display:block"'; ?>
+                                                <a class="exist_doc_<?php echo $row->doc_file_name?>" href="<?php echo base_url()?>uploads/documents_list/<?php echo $img1;?>" download style="color: #1a028c; text-decoration: none;">Download Document</a>
+                                                <?php } ?>
+
+                                                <input type="file" id="is_doc_<?php echo $row->doc_file_name?>" name="is_doc_<?php echo $row->doc_file_name?>" <?php echo $img1_style?>><br/>
+                                                <small class="text-error is_doc_<?php echo $row->doc_file_name?>"><?php echo form_error('is_doc_'.$row->doc_file_name);?></small>
+                                                <small class="text-error is_submitted_<?php echo $row->doc_file_name?>"><?php echo form_error('is_submitted_'.$row->doc_file_name);?></small>
+                                             </td>
+
+                                             <?php 
+                                                if($applicant_essential_data->is_district_app_reject_revert==3)
+                                                { ?>
+                                                   <td><?php echo $district_remarks; ?></td>
+                                             <?php }?>
+
+                                          </tr>
+                                          <?php 
+                                             $sl_no++;
+                                             $img1 = $district_remarks = '';
+                                       }
+                                       elseif($row->parent_id>0)
+                                       { ?>
+                                          <tr>
+
+                                             <?php
+                                                $img5 = '';
+                                                $img5_style = "style='display:none'"; 
+                                                foreach($document_upload_set as $up_docs2){
+                                                   if($row->doc_id == $up_docs2->doc_id){
+                                                      $img5 = $up_docs2->file_name;
+                                                      $district_remarks = $up_docs2->district_remarks;
+                                                      break;
+                                                   }
+                                                }
+                                             ?>
+                                             <?php 
+                                                if($row->doc_id==$row->parent_id){ ?> 
+                                                   <td rowspan="<?php echo $col_span?>"><?php echo $sl_no;?></td>
+                                                <?php } ?>
+                                             <td <?php echo $mandatory_class?>><?php echo $row->doc_label;?></td>
+                                             <td>
+                                                <input type="radio" name="is_submitted_<?php echo $row->doc_file_name?>" onclick="lfn_ShowInputFile(this.value,'<?php echo $row->doc_file_name?>');" value="Yes" <?php if($img5 != ''){echo 'checked';}?>>
+                                             </td>
+                                             <td>
+                                                <input type="radio" name="is_submitted_<?php echo $row->doc_file_name?>" onclick="lfn_ShowInputFile(this.value,'<?php echo $row->doc_file_name?>');" value="No" <?php if($img5 == '' || $img5 == NULL){echo 'checked';}?>>
+                                             </td>
+                                             <td>
+                                                <?php 
+                                                if($img5 !=''){$img5_style = "style='display:block'"; ?>
+                                                <a class="exist_doc_<?php echo $row->doc_file_name?>" href="<?php echo base_url()?>uploads/documents_list/<?php echo $img5;?>" download style="color: #1a028c; text-decoration: none;">Download Document</a>
+                                                <?php } ?>
+                                                <input type="file" id="is_doc_<?php echo $row->doc_file_name?>" name="is_doc_<?php echo $row->doc_file_name?>" <?php echo $img5_style;?>><br/>
+                                                <small class="text-error is_doc_<?php echo $row->doc_file_name?>"><?php echo form_error('is_doc_'.$row->doc_file_name);?></small>
+                                                <small class="text-error is_submitted_<?php echo $row->doc_file_name?>"><?php echo form_error('is_submitted_'.$row->doc_file_name);?></small>
+                                             </td>
+                                             </td>
+                                          </tr> 
+                                          <?php
+                                       } // end of elseif
+                                    } // end of foreach
+                                 }
+                                 ?>
+                                 
+                                 
+                                 <tr>
+                                    <td colspan="5"><strong>Note : </strong>Hardcopy of all documents to be submitted in respective district office.</td>
+                                 </tr>
+                              </tbody>
+                           </table>
+                        </fieldset>
+                        <div class="row">
+                           <div class="col-lg-12 text-center mt-2">
+                                    
+                              <div class="get_error_total" align="center" style="background-color: #bf0000;color: #fff;max-width: 500px;margin: 0 auto;padding: 10px 20px;display: none;">sdgdg</div>
+                              <div class="get_success_total" align="left" style="background-color: #174b10;color: #fff;max-width: 500px;margin: 0 auto;padding: 10px 20px;display: none;">ssddg</div>
+                              <div class="div_roller_total" align="center" style="display: none;"><img src="<?php echo base_url('assets/images/ajax_loader.gif'); ?>" style="max-width: 60px;" /></div>
+                                    
+                           </div>
+                              
+                           <div class="col-lg-12 text-right">
+                              <button class="btn btn-primary mt-2" type="button" name="submit" id="prev_btn" onclick="goto_prev_chk();">Previous</button>
+                              <?php 
+                                 $show_next_btn = '1';
+
+                                 /*if(!empty($applicant_essential_data))
+                                 {
+                                   
+                                   $is_applicant_submitted = $applicant_essential_data->is_applicant_submitted;
+                                   $is_district_app_reject_revert = $applicant_essential_data->is_district_app_reject_revert;
+
+                                   if($is_applicant_submitted =='2' && ($is_district_app_reject_revert =='0'))
+                                   {
+                                       $show_next_btn = '2';
+                                   }
+
+                                   if($is_applicant_submitted ==2 && ($is_district_app_reject_revert ==1 || $is_district_app_reject_revert ==2))
+                                   {
+                                     
+                                       $show_next_btn = '2';
+                                   }
+                                 }*/
+
+                                 if($show_next_btn == 1)
+                                 { ?>
+                                    <!--<button type="submit" name="btn_save_submit" value="save" class="btn btn-success mt-2" >Save</button>
+                                    <button type="submit" name="btn_save_submit" value="submit" class="btn btn-info mt-2" >Submit</button>-->
+                                    <button name="btn_save_submit" type="button" id="next_btn" onclick="goto_doc_submit_chk();" class="btn btn-info mt-2" >Submit</button>
+                                 <?php } ?>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </form>
+   </div>
+</div>
+<?php $this->load->view('common/footer.php'); ?>
+
+<script type="text/javascript">
+   $(function(){
+      $('#alert_msg, .text-error').delay(8000).fadeOut();
+      $('.msg_cont2').delay(8000).fadeOut();
+   });
+
+   function lfn_ShowInputFile(radVal,fileID)
+   {
+      if(radVal=='Yes')
+      {
+         $('#is_doc_'+fileID).show();
+         $('.exist_doc_'+fileID).show();
+      }
+      else
+      {
+         $('#is_doc_'+fileID).hide();
+         $('.exist_doc_'+fileID).hide();
+      }
+
+   }
+
+   function goto_doc_submit_chk(){
+
+      $(".div_roller_total").fadeIn();
+      $('#prev_btn, #next_btn').prop('disabled', true);
+      var e_error = 0;
+      var error_message = '';
+
+      var error_message = 'There have some errors plese check above, Try again.';
+		var alphaletters_spaces = /^[A-Za-z ]+$/;
+		var alphaletters = /^[A-Za-z]+$/;
+		var alphanumerics_withspace = /^[A-Za-z0-9/() ]+$/;
+		var alphanumerics_spaces = /^[A-Za-z0-9_,\- ]+$/;
+		var alphanumerics_no = /^[A-Za-z0-9_/&(@%=<>)\[\]+;:.',\- ]+$/;
+		var onlynumerics = /^[0-9]+$/;
+		var onlynumerics_withdot = /^[0-9.]+$/;
+		var specials_char = /[~`!#$%\^&*+=\[\]\\';./{}()|\\":<>\?]/g;
+		var alphanumerics = /^[A-Za-z0-9]+$/;
+		var emailpattern = /^\b[A-Z0-9._%-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b$/i;
+		var allowedExtensions = /(\.pdf|\.PDF|\.jpg|\.jpeg|\.png|\.JPG|\.JPEG|\.PNG)$/i;
+
+      var form_data = new FormData();
+      form_data.append("application_id", '<?php echo $application_id; ?>');
+      var doccunter = 0;
+      
+      var totalUploadedDocIdArray = [];
+
+      <?php foreach($document_upload_master_data as $single_doc){ ?>
+
+         var chkinputbox = $("input[name='is_submitted_<?php echo $single_doc->doc_file_name; ?>']:checked").val();
+         form_data.append("is_submitted_<?php echo $single_doc->doc_file_name; ?>", chkinputbox);
+         if (chkinputbox == "" || chkinputbox == undefined) 
+         {
+			   e_error = 1;
+			   $('.is_submitted_<?php echo $single_doc->doc_file_name; ?>').html('Doc Checkbox is Required.');
+		   } 
+         else 
+         {
+            if (!chkinputbox.match(alphaletters)) 
+            {
+               e_error = 1;
+               $('.is_submitted_<?php echo $single_doc->doc_file_name; ?>').html('Doc Checkbox accept only Alphabet value.');
+            } 
+            else 
+            {
+               $('.is_submitted_<?php echo $single_doc->doc_file_name; ?>').html('');
+
+               var files = $('#is_doc_<?php echo $single_doc->doc_file_name; ?>')[0].files;
+
+               if(chkinputbox == "Yes")
+               {
+                  doccunter++;
+                  form_data.append("<?php echo $single_doc->doc_file_name; ?>", files[0]);
+                  var imgdata = '';
+                  <?php foreach($document_upload_set as $up_docs2){
+                     if($single_doc->doc_id == $up_docs2->doc_id){ ?>
+                        imgdata = '<?php echo $up_docs2->file_name; ?>';
+                        <?php break;
+                     }
+                  } ?>
+                  
+                  if(imgdata != "")
+                  {
+                     if (document.getElementById("is_doc_<?php echo $single_doc->doc_file_name; ?>").files.length != 0) 
+                     {
+                        var fileInput = document.getElementById('is_doc_<?php echo $single_doc->doc_file_name; ?>');
+                        var filePath = fileInput.value;
+                        var fileSizeall = files[0].size; // 5000000
+                        if (!allowedExtensions.exec(filePath)) 
+                        {
+                           e_error = 1;
+                           $('.is_doc_<?php echo $single_doc->doc_file_name; ?>').html('Document Doc file type Invalid.(Use PDF/PNG/JPG)');
+                        } 
+                        else if(fileSizeall > 5000000) 
+                        {
+                           e_error = 1;
+                           $('.is_doc_<?php echo $single_doc->doc_file_name; ?>').html('Document size not more than 5 MB.');
+                        } 
+                        else 
+                        {
+                           $('.is_doc_<?php echo $single_doc->doc_file_name; ?>').html('');
+                           totalUploadedDocIdArray.push("<?php echo $single_doc->doc_id; ?>");
+                        }
+                     }
+                     else{
+                        <?php foreach($document_upload_set as $up_docs3){
+                           if($single_doc->doc_id == $up_docs3->doc_id){ ?>
+                              totalUploadedDocIdArray.push("<?php echo $single_doc->doc_id; ?>");
+                              <?php break;
+                           }
+                        } ?>
+                     }
+                  }
+                  else
+                  {
+                     if (document.getElementById("is_doc_<?php echo $single_doc->doc_file_name; ?>").files.length == 0) 
+                     {
+                        e_error = 1;
+                        $('.is_doc_<?php echo $single_doc->doc_file_name; ?>').html('Document is Required.');
+                     } 
+                     else 
+                     {
+                        var fileInput = document.getElementById('is_doc_<?php echo $single_doc->doc_file_name; ?>');
+                        var filePath = fileInput.value;
+                        var fileSizeall = files[0].size; // 5000000
+                        if (!allowedExtensions.exec(filePath)) 
+                        {
+                           e_error = 1;
+                           $('.is_doc_<?php echo $single_doc->doc_file_name; ?>').html('Document Doc file type Invalid.(Use PDF/PNG/JPG)');
+                        } 
+                        else if(fileSizeall > 5000000) 
+                        {
+                           e_error = 1;
+                           $('.is_doc_<?php echo $single_doc->doc_file_name; ?>').html('Document size not more than 5 MB.');
+                        } 
+                        else 
+                        {
+                           $('.is_doc_<?php echo $single_doc->doc_file_name; ?>').html('');
+                           totalUploadedDocIdArray.push("<?php echo $single_doc->doc_id; ?>");
+                        }
+                     }
+                  }
+               }
+               else
+               {
+                  $('.is_doc_<?php echo $single_doc->doc_file_name; ?>').html('');
+               }
+            }
+         }
+
+      <?php } ?>  
+
+      /* mandatory field check */
+         var mandatoryDocIdArray = ['1','2','3','8','13','14','16','17'];
+         const found_all = mandatoryDocIdArray.every(elem => totalUploadedDocIdArray.includes(elem));
+         if(found_all == false){
+            e_error = 1;
+            error_message = 'Upload all mandatory Documents.';
+         }
+      /* mandatory field check end*/
+
+      if(doccunter == 0){
+         e_error = 1;
+         error_message = 'Atleast 1 Document need to Submit here.';
+      }
+
+      if(e_error == 1)
+      {
+         $('.div_roller_total').fadeOut();
+         if(error_message != "")
+         {
+            $('.get_error_total').html(error_message);
+            $(".get_error_total").fadeIn();
+         }
+         $(".text-error").fadeIn();
+         $('#prev_btn, #next_btn').prop('disabled', false);
+         setTimeout(function(){ $('.text-error, .get_error_total').fadeOut(); }, 5000);
+      }
+      else
+      {
+         $.ajax({
+            method: 'POST',
+            url: '<?php echo base_url() . "userset/update_alldocument_details"; ?>',
+            data: form_data,
+            dataType: 'JSON',
+            contentType: false,
+            processData: false,
+            success: function(data) {
+               //alert(data.msg);
+               if (data.msg == 1) {
+                  //console.log(data);
+                  //alert(data.msg[0].space_rate);
+                  $('.div_roller_total').fadeOut();
+                  $('.get_success_total').html('Document Details is Updated Successfully.');
+                  $(".get_success_total").fadeIn();
+                  $('input, select').val('');
+                  $('input').html('');
+                  setTimeout(function() {
+                     $('.get_success_total').fadeOut();
+                     window.location.replace("<?php echo site_url('userset/applicant_dashboard')?>");
+                  }, 3000);
+
+               } else {
+                  $('.div_roller_total').fadeOut();
+						$('.get_error_total').html(data.e_msg);
+						$(".get_error_total").fadeIn();
+						setTimeout(function(){ $('.get_error_total').fadeOut(); }, 3000);
+						$('#prev_btn, #next_btn').prop('disabled', false);
+               }
+
+            }
+         });
+      }   
+   }
+
+   function goto_prev_chk(){
+      $(".div_roller_total").fadeIn();
+      $('#prev_btn, #next_btn').prop('disabled', true);
+      window.location.replace("<?php echo site_url('userset/goto_prev_step_aftercheck/3')?>");
+   }
+
+</script>

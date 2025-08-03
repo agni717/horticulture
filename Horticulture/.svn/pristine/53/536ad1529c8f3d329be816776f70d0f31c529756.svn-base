@@ -1,0 +1,294 @@
+<?php
+
+class Admin_M extends MY_Model {
+
+    function __construct() {
+        parent::__construct();
+    }
+
+    public function checklogin($username, $password) {
+
+        $sql = $this->db->select('*')->from('user_master')->where('user_name', $username)->where('password', $password)->where('status', '1');
+        $res = $this->db->get();
+        //var_dump($sql);
+
+
+        if ($res->num_rows() > 0) {
+            $data = $res->row_array();
+			//
+			if($data["u_type"]==2){
+				$this->session->set_userdata('uid', $data["id"]);
+				$this->session->set_userdata('username', $data["user_name"]);
+				$this->session->set_userdata('utype', $data["u_type"]);
+				$this->session->set_userdata('district', $data["district"]);
+				$this->session->set_userdata('distloggedin', TRUE);
+				return true;
+			}else if($data["u_type"]==1){
+				$this->session->set_userdata('uid', $data["id"]);
+				$this->session->set_userdata('username', $data["user_name"]);
+				$this->session->set_userdata('utype', $data["u_type"]);
+				$this->session->set_userdata('hqloggedin', TRUE);
+				return true;
+			}else{
+				return false;
+			}
+			
+			
+            
+			
+            
+        } else {
+            return false;
+        }
+
+        $res->free_result();
+    }
+
+    public function hqloggedin() {
+
+        return (bool) $this->session->userdata('hqloggedin');
+    }
+	
+	public function distloggedin() {
+
+        return (bool) $this->session->userdata('distloggedin');
+    }
+
+
+    public function hash($string) {
+
+        return hash('sha512', $string . config_item('encryption_key'));
+    }
+	
+	public function get_user_id_by_application_id($appid)
+    {
+        $this->db->select('user_id');
+        
+		$this->db->from('application_master');
+		$this->db->where('application_id',$appid);
+		$query = $this->db->get();
+		
+        //$query = $this->db->get();
+		
+        if($query->num_rows()==0)
+        {
+            return false;
+        }else{
+            return $query->row()->user_id;
+            //return $query->row();
+        }
+    }
+	
+	//Dashboard Search Application List Start
+	public function get_App_list($data,$dist = NULL){
+		$this->db->select('am.*,rm.*');
+        
+		$this->db->from('application_master as am');
+		$this->db->join('rem_registration_master as rm','rm.user_id=am.user_id','left');
+		$this->db->where($data);
+		if($dist != NULL){
+			$this->db->where('proj_district',$dist);
+		}
+		$query = $this->db->get();
+		
+        //$query = $this->db->get();
+		
+        if($query->num_rows()==0)
+        {
+            return false;
+        }else{
+            return $query->result();
+            //return $query->row();
+        }
+	}
+	//Dashboard Search Application List Start
+	
+	public function get_application_list($param_data)
+    {
+        extract($param_data);
+        if(isset($application_id) && $application_id !='')
+        {
+        $this->db->where('application_id',$application_id);
+        }
+		if(isset($district) && $district !='')
+        {
+        $this->db->where('proj_district',$district);
+        }
+        if(isset($scheme_id) && $scheme_id !='')
+        {
+        $this->db->where('scheme_id',$scheme_id);
+        }
+        
+		if(isset($is_applicant_submitted) && $is_applicant_submitted!='')
+        {
+        $this->db->where('is_applicant_submitted',$is_applicant_submitted);
+        }
+        if(isset($is_district_app_reject_revert) && $is_district_app_reject_revert!='')
+        {
+        $this->db->where('is_district_app_reject_revert',$is_district_app_reject_revert);
+        }
+        if(isset($is_hq_app_reject_revert) && $is_hq_app_reject_revert!='')
+        {
+        $this->db->where('is_hq_app_reject_revert',$is_hq_app_reject_revert);
+        }
+
+        if(isset($is_first_sanction) && $is_first_sanction!='')
+        {
+            $this->db->where('is_first_sanction',$is_first_sanction);
+        }
+
+        if(isset($is_project_cost_updated_dist) && $is_project_cost_updated_dist!='')
+        {
+            $this->db->where('is_project_cost_updated_dist',$is_project_cost_updated_dist);
+        }
+
+        if(isset($is_dist_approve_1st_installment_release) && $is_dist_approve_1st_installment_release!='')
+        {
+            $this->db->where('is_dist_approve_1st_installment_release',$is_dist_approve_1st_installment_release);
+        }
+		if(isset($is_dist_approve_2nd_installment_release) && $is_dist_approve_2nd_installment_release!='')
+        {
+            $this->db->where('is_dist_approve_2nd_installment_release',$is_dist_approve_2nd_installment_release);
+        }
+        $this->db->select('am.*,u.mobile,u.email,u.email,u.first_name,u.last_name,s.scheme_name');
+        //$this->db->select('application_master.application_id,application_master.name,application_master.email,user_info.mobile');
+        $this->db->from('application_master as am');
+        $this->db->join('rem_registration_master as u', 'u.sch_id = am.scheme_id'); 
+        $this->db->join('schemes_master as s', 'am.scheme_id = s.id'); 
+        $this->db->group_by('am.application_id');      
+        //$this->db->join('schemes_master', 'schemes_master.id = application_master.scheme_id');       
+        $query = $this->db->get();
+        if($query->num_rows()>0){
+            return $query->result();
+            //return $query->count_all_results();
+        }else{
+            return false;
+        }
+        
+    }
+	
+	//Citizen form details queries start
+	public function get_application_master_data($application_id)
+    {
+        $this->db->select('am.*,rm.first_name,rm.middle_name,rm.last_name,rm.mobile,rm.email,rm.image,bm.bank_name,b.branch_name,b.IFSCCODE as ifsc');
+        $this->db->from('application_master as am');
+		$this->db->join('rem_registration_master as rm','rm.user_id=am.user_id','left');
+		$this->db->join('bank_master as bm','bm.bank_id=am.proj_bank_name','left');
+		$this->db->join('branch_master as b','b.branch_id=am.proj_branch','left');
+        $this->db->where('application_id',$application_id);
+        $query = $this->db->get();
+
+        if($query->num_rows()==0)
+        {
+            return false;
+        }else{
+            //return $query->result();
+            return $query->row();
+        }
+    }
+	
+	public function get_industry_master_data($id="",$application_id="")
+    {
+        if($id!=""){
+            $this->db->where('industry_id',$id);
+        }
+        if($application_id!=""){
+            $this->db->where('industry_application_id',$application_id);
+        }
+        $this->db->select('*');
+        $this->db->from('industry_master');
+        $query = $this->db->get();
+        if($query->num_rows()>0){
+            return $query->result();
+        }else{
+            return false;
+        }
+    }
+	
+	public function get_plant_machinary_data($application_id)
+    {
+        $this->db->select('*');
+        $this->db->from('applicant_plant_machinary');
+        $this->db->where('pm_application_id',$application_id);
+        $query = $this->db->get();
+
+        if($query->num_rows()==0)
+        {
+            return false;
+        }else{
+            return $query->result();
+            //return $query->row();
+        }
+    }
+	
+	public function get_document_upload_master_data()
+	{
+		$this->db->select('*');
+		$this->db->from('document_upload_master');
+		$this->db->where('status',1);
+		$query = $this->db->get();
+		if($query->num_rows()>0)
+		{
+			return $query->result();
+		}else{
+			return false;
+		}
+	}
+
+	public function get_submitted_file($application_id,$document_id)
+	{
+		$this->db->select('dum.*,dm.file_document_ms,dm.file_application_id,dm.file_name,dm.district_remarks');
+		$this->db->from('document_master as dm');
+		$this->db->join('document_upload_master as dum','dm.file_document_ms=dum.doc_id','left');
+		$this->db->where(array('dm.file_application_id'=>$application_id,'dm.file_document_ms'=>$document_id));
+		$query = $this->db->get();
+		if($query->num_rows()>0)
+		{
+			return $query->row();
+		}else{
+			return false;
+		}
+	}
+	
+	public function document_list($id)
+    {
+        if($id!="")
+        {
+            $this->db->where('dm.file_application_id',$id);
+        }
+        $this->db->select('*');
+        $this->db->from('document_master as dm');
+        $this->db->join('document_upload_master as dum','dm.file_document_ms=dum.doc_id');
+        $query = $this->db->get();
+        if($query->num_rows()>0){
+            return $query->result();
+        }else{
+            return false;
+        }
+
+    }
+	
+	//Citizen form details queries end
+	
+	public function get_registration_master_data($user_id)
+    {
+        $this->db->select('rm.*,d.district_name,st.subdiv_name,bm.block_name,pm.panchayat_name');
+        $this->db->from('rem_registration_master as rm');
+        $this->db->join('district_master as d','rm.district=d.district_code','left');
+		$this->db->join('subdivision_tab as st','rm.sub_division=st.subdiv_id','left');
+		$this->db->join('block_master as bm','rm.block=bm.block_id','left');
+		$this->db->join('panchayat_master as pm','rm.gram_panchayat=pm.panchayat_id','left');
+		
+        $this->db->where('user_id',$user_id);
+        $query = $this->db->get();
+
+        if($query->num_rows()==0)
+        {
+            return false;
+        }else{
+            return $query->result();
+            //return $query->row();
+        }
+    }
+	
+}
